@@ -17,15 +17,18 @@ import Foundation
 /// telegrams via `PHCTelegram`.
 final class STMv3Client: PHCClient, @unchecked Sendable {
 
-    /// XML-RPC method names, verbatim from the binary.
+    /// XML-RPC method names, verbatim from the V3 binary (see docs/PROTOCOL.md §1).
     enum Method {
         static let connect      = "service.stm.connect"
+        static let activate     = "service.stm.activate"   // enable visualisation session
         static let getModule    = "service.stm.getModule"
+        static let getState     = "service.stm.getState"   // read channel states
         static let sendTelegram = "service.stm.sendTelegram"
-        static let sendPOR      = "service.stm.sendPOR"
+        static let getVersion   = "service.stm.getVersion"
+        static let getVoltage   = "service.stm.getVoltage"
+        static let getClock     = "service.stm.getClock"
         static let getProgress  = "service.stm.getProgress"
         static let ping         = "iserver.ping"
-        static let getVersion   = "iserver.getVersion"
     }
 
     struct Endpoint {
@@ -49,14 +52,17 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
     }
 
     func connect() async throws {
-        // TODO: XML-RPC `service.stm.connect` (+ auth). Then begin receiving STM
-        // events and forward them to `continuation` as StateUpdates.
-        throw PHCClientError.notImplemented("STM v3 connect")
+        // Flow (docs/PROTOCOL.md §1):
+        //   1. service.stm.connect   (+ auth — params TBC from capture)
+        //   2. service.stm.activate  (else calls fault with VisuNotActivated)
+        // Then begin receiving STM events and forward them to `continuation`.
+        throw PHCClientError.notImplemented("STM v3 connect/activate")
     }
 
     func loadProject() async throws -> PHCProject {
-        // TODO: enumerate modules via `service.stm.getModule`, map AMD/JRM/EMD
-        // channels to Devices/Rooms (the project XML also carries names/rooms).
+        // TODO: enumerate via service.stm.getModule, read states via
+        // service.stm.getState, then map AMD/DIM/JRM/EMD channels to
+        // Devices/Rooms (names/rooms come from the project XML).
         throw PHCClientError.notImplemented("loadProject")
     }
 

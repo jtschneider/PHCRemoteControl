@@ -4,92 +4,121 @@ Everything we know about talking to a PEHA/Honeywell PHC system. Two completely
 different protocols live here — don't confuse them:
 
 1. **STM-IP protocol** — between *this app* and the **STM** over the LAN. The one
-   we ultimately need. **Now largely understood** thanks to decompiling the PHC
-   Systemsoftware (see §1).
+   we need. **Now well understood** from decompiling the PHC Systemsoftware (§1).
 2. **PHC bus protocol** — between the STM and the modules over **RS-485**. Fully
-   understood (see §2). The app never speaks it directly, but it is the *payload*
-   carried inside the STM-IP `sendTelegram` calls, so it matters a lot.
+   understood (§2). The app never speaks it directly, but it is the *payload*
+   carried inside the STM-IP `sendTelegram` calls.
+
+Sources: decompiled **PHC Systemsoftware V2.70** (2010, native `iserver.exe`) and
+**V3.0** (2013/14, Java `toolframework.jar` + `rs232_interface.exe`), plus the
+shipped `functions.xml` / `modules.xml`, cross-checked against
+[ESPHome-PHC-Controller](https://github.com/TillFleisch/ESPHome-PHC-Controller).
 
 ---
 
 ## 1. STM-IP protocol (app ⇄ STM) — XML-RPC
 
-### Confirmed by decompiling PHC Systemsoftware V2.70 (2010)
+### Transport
+- **XML-RPC over TCP** (GNU CommonC++ `ost::XMLRPC`; the V3 sources reference
+  `PhcXmlRpcClient.cpp` / `XmlRpcServer.cpp`).
+- Default port **6680** (*"Socket-Port for XML-RPC (default: 6680)"*). The local
+  `iserver`/`rs232_interface` bridge listens here; the STM v3 firmware exposes
+  the same surface over the LAN (still to be 100%-confirmed for port — see
+  "remaining unknowns").
+- Standard `<methodCall>`/`<methodResponse>` envelope; params are
+  string/int/double/boolean/dateTime/array/struct (`addParam*`, `begArray`,
+  `endStruct`, `addParamDateTime`). There's also a **keep-alive timer** on the
+  connection.
 
-The Systemsoftware ships an **Integration Server** (`app/iserver/iserver.exe`),
-built on **GNU CommonC++** (`ccgnu2`/`ccext2`), whose `ost::XMLRPC` class is an
-**XML-RPC server over TCP**. The GUI (project editor) is the XML-RPC *client*.
-The server bridges XML-RPC ⇄ the STM. Extracted facts:
+### Full XML-RPC method set (verbatim from the V3 binary)
+| Method                          | Purpose                                              |
+|---------------------------------|------------------------------------------------------|
+| `service.stm.connect`           | Open/initialise the STM connection                   |
+| `service.stm.activate`          | **Activate visualisation** (required before control — see `VisuNotActivated`) |
+| `service.stm.getModule`         | Enumerate modules present on the STM                 |
+| `service.stm.getState`          | **Read current channel states** (build/refresh UI)   |
+| `service.stm.sendTelegram`      | **Send a raw PHC bus telegram to a module** (core control) |
+| `service.stm.getVersion`        | STM firmware version                                 |
+| `service.stm.getVoltage`        | Bus voltage                                          |
+| `service.stm.getClock` / `setClock` | Real-time clock                                  |
+| `service.stm.getProgress`       | Progress of a long operation                         |
+| `service.stm.sendPOR` / `sendSinglePOR` | Send POR (config) table / single entry       |
+| `service.stm.writeBinary` / `deleteBinary` / `checkBinaryCRC` | Project binary up/down |
+| `service.stm.setStandardText`   | Set display text                                     |
+| `service.module.writeProject`   | Write a project to a module                          |
+| `service.module.firmwareUpdate` / `…AES` | Module firmware update                       |
+| `iserver.ping` / `getVersion` / `getPath` / `shutdown` | Server utilities             |
 
-- Banner: *"Running in XMLRPC-mode!"*, *"Listening on Port: %d"*,
-  *"Socket-Port for XML-RPC (default: **6680**)"*.
-- Config keys: `tcpRpcPort`, `tcpRpcIPAddress`, `tcpRpcMaxConnections`,
-  `busaddress`, `serPort` (this 2010 build reaches the STM over a **serial COM
-  port**, default COM1; STM v3 does it over Ethernet instead — see caveat).
-- Standard XML-RPC envelope: `<methodCall>` / `<methodName>` / `<methodResponse>`;
-  param types via `addParam` string/int/bool + `begArray`/`endArray` +
-  struct/member — i.e. plain `<string>`, `<int>`, `<boolean>`, `<array>`,
-  `<struct>`.
+### Control flow (how the app drives the house)
+1. `service.stm.connect` — attach to the control unit.
+2. `service.stm.activate` — enable the visualisation session (otherwise calls
+   fault with `VisuNotActivated`).
+3. `service.stm.getModule` + `service.stm.getState` — enumerate modules and read
+   channel states to build the UI.
+4. Control: `service.stm.sendTelegram` with a PHC bus telegram (§2) addressed to
+   the AMD / DIM / JRM channel.
+5. Live updates: the STM reports async **events** (button presses, state
+   changes) which the client folds into state. (Exact delivery — server-pushed
+   methodCall vs. polling `getState` — to confirm via capture.)
 
-### The XML-RPC method set (exact names from the binary)
+### XML-RPC fault codes (`enums/EErrorCode`)
+`MethodNotFound`, `ParameterCount`, `ExecutionFailed`, `UnregisteredBusAdr`,
+`RequestedParamEmpty`, `ParameterOutOfRange`, `FeatureNotSupported`,
+`ModuleNotFound`, `RequestTimeout`, `STMNotConnected`, **`VisuNotActivated`**,
+`MethodCallFailed`, `UnexpectedEndOfFile`, `WriteMCCError`,
+`CommandNotProgrammed`, `WriteFUIError`.
 
-| Method                          | Purpose                                            |
-|---------------------------------|----------------------------------------------------|
-| `service.stm.connect`           | Open/initialise the STM connection                 |
-| `service.stm.getModule`         | Query module(s) / state                            |
-| `service.stm.sendTelegram`      | **Send a raw PHC bus telegram to a module** (core) |
-| `service.stm.sendPOR`           | Send POR (power-on-reset / config) table           |
-| `service.stm.sendSinglePOR`     | Send a single POR entry                            |
-| `service.stm.getProgress`       | Progress of a long operation                       |
-| `service.module.writeProject`   | Write a project to a module                        |
-| `service.module.firmwareUpdate` / `…AES` | Module firmware update                     |
-| `iserver.ping` / `getVersion` / `getPath` / `shutdown` / `conf` / `log` | Server utilities |
+### Connection model (`interfaces/IAnlagenSTMDetails`)
+Each STM in a project carries: `ip`, `mac`, `serial`, `phcIP`, a
+`connectedVia` ∈ {**LAN**, USB, Gateway, RS232} and a `phcKommunikation` ∈
+{**LAN**, RS485}, plus gateway chaining (one STM can be the gateway for others —
+the app supports up to 3 STMs per project). STM version is `V2`/`V3`
+(`enums/ESTMVersion`). Discovery populates `ip`/`mac` automatically.
 
-### STM-internal command/telegram names (seen in log strings)
-`STM_VERSION_READ`, `STM_TELE_PASSTHRU` (STM passes a telegram through to a
-module — *"module not found (address 0x%2X)"*), `STM_GET_REALTIMECLOCK`,
-`STM_POR_TAB_FREE`, `STM_EINZEL_POR` (single POR), `PHC_STM_INTERN_TO_EXTERN`.
-Plus async **events**: *"event from STM %d: %02x%02x - dd.mm.yyyy hh:mm:ss"* —
-this is how button presses / state changes are reported back to the client.
+### Command/telegram model (`interfaces/ICommand`, `functions.xml`)
+A command has an `internalCommandName`, an integer `command` code, a
+`commandGroupname`, optional `extendedBytes`, and flags
+(`STOP_ANALOG_PROCESSING`, `INVISIBLE`, `GLOBAL`, `INI`). `functions.xml` maps
+every module type to its commands; the integer `com` **is** the function code
+placed in the telegram content byte. Key output commands (derived; encoded in
+`Sources/Client/PHCFunctions.swift`):
 
-### How control works, end to end
-1. `service.stm.connect` to attach to the control unit.
-2. `service.stm.getModule` to enumerate modules and read state (build the UI).
-3. To switch a light / move a shutter: `service.stm.sendTelegram` with a PHC bus
-   telegram (format in §2) addressed to the AMD/JRM channel.
-4. Live updates arrive as STM **events** (the app folds these into its state).
+| Module type (`defaultCSType`) | Command | `com` |
+|-------------------------------|---------|-------|
+| AMD24_AUS (Light), UTM_AUS    | ON      | `2`   |
+| AMD24_AUS (Light)             | OFF     | `3`   |
+| EMD24_LED (LED)               | ON / OFF| `2` / `3` |
+| DIM_AUS (Dimmer)              | ON / OFF (+ ramp variants 4–25) | `2` / `3` |
+| JRM_AUS (Shutter)             | up / down / stop (parameterised, `com` 2–15) | see file |
 
-So: **the app is an XML-RPC client; commands are PHC bus telegrams wrapped in
-`service.stm.sendTelegram`.** We already know the telegram bytes exactly (§2).
+The telegram content byte is `(channel << shift) | com` (shift = 5 for
+AMD/DIM/JRM, 4 for EMD-LED), matching §2.
 
-### Caveat: V2.70 (2010) vs the user's STM v3
-This 2010 build runs `iserver` locally and reaches the STM over **serial**. The
-user has an **STM v3** that the official iOS app reaches over **Ethernet**
-directly. The overwhelmingly likely reality: the STM v3 firmware runs an onboard
-equivalent of `iserver` (the **STMD** daemon) exposing this same `service.stm.*`
-XML-RPC surface over TCP. Still to confirm for v3 specifically:
-- the **TCP port** the STM v3 listens on (6680 is the documented default, but the
-  STM may differ),
-- **discovery** (the official app auto-finds the STM — likely a UDP broadcast),
-- **authentication** (the project password, and how it's presented).
+### Remaining unknowns (need a capture or the main-app classes)
+The framework jar is the tool-plugin SDK; the **XML-RPC client + discovery +
+auth live in the main `PHC Systemsoftware V3.0.exe`** (not uploaded). Still to
+pin down for the STM v3 over LAN:
+- the **exact TCP port** the STM v3 firmware listens on (6680 is the documented
+  default),
+- **LAN discovery** (the app auto-finds `ip`/`mac` — almost certainly a UDP
+  broadcast; need port + payload),
+- **auth** — what `connect`/`activate` take (project password?),
+- the **exact XML-RPC parameter order/types** for `sendTelegram`, `getState`,
+  `getModule` (telegram likely passed as a base64 string or int array).
 
-### Fastest way to confirm v3 specifics
-1. **Packet-capture the official iOS app** against the real STM (one light
-   on/off + app launch). Plain XML-RPC over HTTP/TCP is trivially readable. This
-   nails port + discovery + auth + exact param order in one shot.
-2. Or obtain a **newer (V3.x-era) Systemsoftware** whose `iserver` does TCP-to-STM
-   and decompile the same way.
+**Fastest way to finish:** a 2-minute packet capture of the official iOS app
+(launch + one light on/off) nails all four at once. Alternatively, upload the
+main `PHC Systemsoftware V3.0.exe` and we decompile its `PhcXmlRpcClient`.
 
-Findings get encoded in `Sources/Client/STMv3Client.swift`.
+These findings are encoded in `Sources/Client/STMv3Client.swift`.
 
 ---
 
 ## 2. PHC bus protocol (STM ⇄ modules, RS-485) — the telegram payload
 
 Fully reverse-engineered by the community and implemented in
-[TillFleisch/ESPHome-PHC-Controller](https://github.com/TillFleisch/ESPHome-PHC-Controller)
-and the openHAB `phc` binding. This is exactly what rides inside
-`service.stm.sendTelegram`.
+[ESPHome-PHC-Controller](https://github.com/TillFleisch/ESPHome-PHC-Controller).
+This is exactly what rides inside `service.stm.sendTelegram`.
 
 ### Physical layer
 - RS-485, **19200 baud, 8 data bits, no parity, 2 stop bits**.
@@ -105,7 +134,8 @@ byte n+1..2 : CRC16     (little-endian: low byte first)
   original value. Matches confirmations and dedupes retransmits.
 - **CRC**: CRC-16/X-25 — poly `0x1021` reflected (`0x8408`), init `0xFFFF`,
   reflected in/out, final XOR `0xFFFF`. Over bytes `0..n` (address + length +
-  content), appended low byte first.
+  content), appended low byte first. (Implemented + verified in
+  `Sources/Client/PHCTelegram.swift`.)
 
 ### Module classes (the 3 high bits of the address byte)
 | Class            | Address bits | Role                                   |
@@ -118,7 +148,7 @@ byte n+1..2 : CRC16     (little-endian: low byte first)
 
 ### Commands (content byte semantics)
 - **AMD output** (content length 1): `(channel << 5) | fn`, `fn` = `0x02` ON,
-  `0x03` OFF.
+  `0x03` OFF (matches `functions.xml` `com` 2/3).
 - **EMD LED output**: `(channel << 4) | fn`, `0x02` ON / `0x03` OFF (4-bit channel).
 - **JRM shutter idle/stop** (length 2): `content[0]=(channel<<5)|0x02`,
   `content[1]=0xFC` (priority).
@@ -129,7 +159,4 @@ byte n+1..2 : CRC16     (little-endian: low byte first)
   of channel states for that module.
 - **Config request** from a module: `content[0]==0xFF` → controller replies with
   that module's config (see `send_amd_config` / `send_emd_config` in the ESP project).
-
-The Swift implementations of CRC + telegram builders live in
-`Sources/Client/PHCTelegram.swift`.
 </content>
