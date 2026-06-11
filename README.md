@@ -59,9 +59,14 @@ against the mock with a sample project (rooms, lights, dimmers, shutters).
 ## Roadmap
 
 1. ✅ Runnable UI skeleton against a mock backend.
-2. ⏳ **Capture the STM v3 protocol** (decompile the PHC Systemsoftware `.jar`,
-   and/or packet-capture the official app). See [docs/PROTOCOL.md](docs/PROTOCOL.md).
-3. ⏳ Implement `STMv3Client` (discovery + project load + commands + live state).
-4. ⏳ Replace mock with the real client behind a settings toggle.
-5. ⏳ Scenes, favourites, remote (off-LAN) access.
+2. ✅ **Protocol decoded** by decompiling the PHC Systemsoftware: it's
+   **XML-RPC** (`service.stm.*`, default port 6680) carrying raw PHC bus
+   telegrams. The telegram builder + CRC are implemented and verified in
+   `Sources/Client/PHCTelegram.swift`. See [docs/PROTOCOL.md](docs/PROTOCOL.md).
+3. ⏳ **Confirm STM v3 network specifics** — packet-capture the official app for
+   the exact port, LAN discovery, auth, and XML-RPC param order.
+4. ⏳ Finish `STMv3Client` (XML-RPC over TCP: connect, getModule → project, send
+   telegrams, fold STM events into live state).
+5. ⏳ Replace mock with the real client behind a settings toggle.
+6. ⏳ Scenes, favourites, remote (off-LAN) access.
 </content>
