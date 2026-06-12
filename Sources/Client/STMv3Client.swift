@@ -88,17 +88,23 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
     }
 
     func moveShutterFull(downRef: ChannelRef, upRef: ChannelRef?, command: ShutterCommand) async throws {
+        // Confirmed by capture of the official app (shutter A, EMD module 2):
+        //   MOVE (long hold): press(2) → longPress(3) on the direction's channel
+        //   STOP (short tap):  press(2) → release(4) → doublePress(5) — event 5 is the
+        //                      "click confirmed" pulse that halts the motor in either direction.
         switch command {
-        case .stop:
-            try await simInputEvent(dip: downRef.dip, event: .press, channel: downRef.channel)
-            try await simInputEvent(dip: downRef.dip, event: .release, channel: downRef.channel)
         case .down:
-            try await simInputEvent(dip: downRef.dip, event: .press, channel: downRef.channel)
-            try await simInputEvent(dip: downRef.dip, event: .longPress, channel: downRef.channel)
+            try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .press)
+            try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .longPress)
         case .up:
             let target = upRef ?? downRef
-            try await simInputEvent(dip: target.dip, event: .press, channel: target.channel)
-            try await simInputEvent(dip: target.dip, event: .longPress, channel: target.channel)
+            try await simInputEvent(emdModule: target.dip, channel: target.channel, event: .press)
+            try await simInputEvent(emdModule: target.dip, channel: target.channel, event: .longPress)
+        case .stop:
+            // A short tap on the senken (down) channel stops motion regardless of direction.
+            try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .press)
+            try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .release)
+            try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .doublePress)
         }
     }
 
@@ -153,10 +159,14 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
         return state
     }
 
-    /// simInputEvent(stm_idx=0, class=2, module_dip, event_type, channel)
-    private func simInputEvent(dip: Int, event: InputEvent, channel: Int) async throws {
+    /// simInputEvent(stm_idx=0, class=2, channel, event_type, emd_module)
+    ///
+    /// Param order confirmed by capture (shutter A): param3 = channel address (CHA adr),
+    /// param5 = the EMD module's simInputEvent address. That address is the ppfx module
+    /// adr × 2 (module 2 → 4, verified for shutter A). Other modules need confirmation.
+    private func simInputEvent(emdModule: Int, channel: Int, event: InputEvent) async throws {
         _ = try await call(method: "service.stm.simInputEvent",
-                           params: [.int(0), .int(2), .int(dip), .int(event.rawValue), .int(channel)])
+                           params: [.int(0), .int(2), .int(channel), .int(event.rawValue), .int(emdModule * 2)])
     }
 
     // MARK: - XML-RPC transport
@@ -235,8 +245,9 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
 
 private enum InputEvent: Int {
     case press = 2
-    case longPress = 3
+    case longPress = 3       // hold → start movement
     case release = 4
+    case doublePress = 5     // "click confirmed" → stop pulse
 }
 
 // MARK: - ChannelRef extensions for bus addressing

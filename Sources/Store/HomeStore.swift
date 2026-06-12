@@ -82,10 +82,14 @@ final class HomeStore {
         project?.devices[device.id]?.state.shutterMoving = (command == .stop) ? nil : command
         let upRef = device.shutterUpRef
         Task {
-            if let real = client as? STMv3Client {
-                try? await real.moveShutterFull(downRef: ref, upRef: upRef, command: command)
-            } else {
-                try? await client.moveShutter(ref, command)
+            do {
+                if let real = client as? STMv3Client {
+                    try await real.moveShutterFull(downRef: ref, upRef: upRef, command: command)
+                } else {
+                    try await client.moveShutter(ref, command)
+                }
+            } catch {
+                phase = .failed("Shutter \(command): \(error.localizedDescription)")
             }
         }
     }
