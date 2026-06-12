@@ -32,4 +32,4 @@ struct StateUpdate: Sendable {
     let deviceID: UUID
     let state: DeviceState
 }
-</content>
+

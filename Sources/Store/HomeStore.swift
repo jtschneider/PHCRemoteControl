@@ -80,7 +80,14 @@ final class HomeStore {
     func moveShutter(_ device: Device, _ command: ShutterCommand) {
         guard let ref = device.ref else { return }
         project?.devices[device.id]?.state.shutterMoving = (command == .stop) ? nil : command
-        Task { try? await client.moveShutter(ref, command) }
+        let upRef = device.shutterUpRef
+        Task {
+            if let real = client as? STMv3Client {
+                try? await real.moveShutterFull(downRef: ref, upRef: upRef, command: command)
+            } else {
+                try? await client.moveShutter(ref, command)
+            }
+        }
     }
 }
-</content>
+

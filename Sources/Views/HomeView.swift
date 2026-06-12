@@ -77,4 +77,4 @@ struct RoomView: View {
         .environment(store)
         .onAppear { store.start() }
 }
-</content>
+

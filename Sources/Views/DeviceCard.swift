@@ -145,4 +145,4 @@ private struct ShutterControl: View {
     }
     .environment(store)
 }
-</content>
+

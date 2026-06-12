@@ -18,4 +18,4 @@ struct ChannelRef: Hashable, Codable, Sendable {
 
     var description: String { "\(moduleClass.rawValue.uppercased()) #\(dip).\(channel)" }
 }
-</content>
+

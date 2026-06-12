@@ -34,11 +34,17 @@ struct Device: Identifiable, Codable, Sendable {
     var ref: ChannelRef?
     var state: DeviceState
 
-    init(id: UUID = UUID(), name: String, kind: DeviceKind, ref: ChannelRef? = nil, state: DeviceState = .init()) {
+    /// For shutters only: the EMD input channel that raises (heben).
+    /// `ref` holds the lower (senken) channel; both use simInputEvent.
+    var shutterUpRef: ChannelRef?
+
+    init(id: UUID = UUID(), name: String, kind: DeviceKind, ref: ChannelRef? = nil,
+         shutterUpRef: ChannelRef? = nil, state: DeviceState = .init()) {
         self.id = id
         self.name = name
         self.kind = kind
         self.ref = ref
+        self.shutterUpRef = shutterUpRef
         self.state = state
     }
 
@@ -52,4 +58,4 @@ struct Device: Identifiable, Codable, Sendable {
         }
     }
 }
-</content>
+

@@ -59,4 +59,4 @@ extension MockPHCClient {
         return PHCProject(name: "My House", rooms: rooms, devices: devices)
     }
 }
-</content>
+

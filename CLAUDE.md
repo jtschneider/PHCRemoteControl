@@ -2,114 +2,158 @@
 
 Project memory & status for **PHC Remote Control** — a modern iOS app to control
 a PEHA/Honeywell PHC installation over the LAN, replacing the aging official
-*PHC Home Control* app (which works but isn't built for larger displays).
+*PHC Home Control* app.
 
-> Read this first when resuming. Deep protocol detail lives in
-> [docs/PROTOCOL.md](docs/PROTOCOL.md); architecture in
-> [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+> Deep protocol detail lives in [docs/PROTOCOL.md](docs/PROTOCOL.md);
+> architecture in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## TL;DR of the situation
 
-- The user's control unit is an **STM v3** on the LAN. The app talks to it over
-  IP — it never touches the RS‑485 bus. (No ESP32 bridge needed.)
-- The STM speaks **XML‑RPC over plain HTTP**, default port **6680**.
-- The user connects by **typing the STM's IP** (their old app works that way), so
-  **LAN auto‑discovery is optional** — we don't need to reverse it to ship.
-- We have fully reverse‑engineered the protocol from the PHC Systemsoftware
-  (decompiled **V2.70** native `iserver.exe` and **V3.0** Java
-  `toolframework.jar` + `rs232_interface.exe` + `functions.xml`).
-- The app **runs today** end‑to‑end against an in‑memory mock; the real
-  transport (`STMv3Client`) is ~90% specified and stubbed, pending one packet
-  capture to confirm wire details.
+- Control unit: **STM v3** on the LAN at `192.168.x.x`.
+- Transport: **XML-RPC over plain HTTP**, port **6680**, path **`/`**.
+- **No authentication required** for LAN connections — confirmed by capture.
+- Project structure is downloaded from the STM as a ZIP file and parsed locally.
+- App builds and runs in the iOS simulator against the mock client.
+- **Blocked:** ZIP decompression fails when running against the real STM;
+  fix in progress based on a new proxy capture.
 
 ## What's done
 
-- ✅ SwiftUI app skeleton (iPhone + iPad, iOS 17+), transport‑agnostic.
-  Adaptive `NavigationSplitView`: rooms sidebar + device cards (lights, dimmers,
-  outlets, shutters). Builds via XcodeGen (`project.yml`).
-- ✅ `PHCClient` protocol boundary; `MockPHCClient` drives the whole app with a
-  sample home + simulated shutter travel.
-- ✅ `@Observable HomeStore` with optimistic updates + live event stream.
-- ✅ `PHCTelegram.swift` — CRC‑16/X.25 (verified against the `0x906E` check
-  value) and AMD/EMD/DIM/JRM telegram builders.
-- ✅ `PHCFunctions.swift` — function/`com` codes from `functions.xml`.
-- ✅ `STMv3Client.swift` — full XML‑RPC method set + connect→activate→getState
-  flow, builds correct telegrams; only the HTTP/XML‑RPC wire calls remain.
-- ✅ Protocol fully documented in `docs/PROTOCOL.md`.
+- ✅ SwiftUI app (iPhone + iPad, iOS 17+). `NavigationSplitView`: room sidebar
+  + device cards. Builds via XcodeGen (`project.yml`). Simulator build works.
+- ✅ `ConnectionView` — IP entry screen; stores last IP in `@AppStorage`.
+- ✅ `PHCClient` protocol + `MockPHCClient` (full simulated home, shutter travel).
+- ✅ `HomeStore` — `@Observable`, optimistic updates, live event stream.
+- ✅ `PHCTelegram.swift` — CRC-16/X.25, AMD/EMD/JRM telegram builders
+  (used for reference; STM handles framing internally on the wire).
+- ✅ `PHCFunctions.swift` — com codes from `functions.xml`.
+- ✅ `STMv3Client.swift` — **fully wired**:
+  - `connect()` → `service.stm.whoAreYou`
+  - `loadProject()` → `readFile` loop → ZIP reassembly → ppfx parse
+  - `setPower()` → `sendTelegram(0, amdBusAddr, (ch<<5)|com)`
+  - `moveShutter()` → `simInputEvent` with EMD up/down refs
+  - State polling loop (AMD modules, 1 s interval)
+- ✅ `PHCProjectParser.swift` — parses `project.ppfx` XML into `PHCProject`
+  with rooms, lights, outlets, shutters.
+- ✅ Project files extracted and committed under `project/` for reference
+  (`project.ppfx`, `project.tpfx`, `project.cpfx`).
 
-## Protocol summary (confirmed)
+## Wire protocol — fully confirmed by mitmproxy capture
 
-- **Transport:** XML‑RPC over HTTP, default TCP port **6680** (GNU CommonC++).
-- **Method set:** `service.stm.{connect, activate, getModule, getState,
-  sendTelegram, getVersion, getVoltage, getClock/setClock, getProgress, sendPOR,
-  sendSinglePOR, writeBinary, deleteBinary, checkBinaryCRC, setStandardText}`,
-  `service.module.{writeProject, firmwareUpdate(AES)}`, `iserver.{ping,
-  getVersion, getPath, shutdown}`.
-- **Control flow:** `connect` → `activate` (required — else `VisuNotActivated`
-  fault) → `getModule`/`getState` to build UI → `sendTelegram` to control →
-  async STM events report state changes back.
-- **Payload:** `sendTelegram` carries a raw PHC bus telegram —
-  `address(class<<5|dip)`, `toggle<<7|length`, content, CRC‑16/X25 (LE). Light
-  ON `com=2` / OFF `com=3`; content byte `= (channel<<5)|com` (shift 4 for
-  EMD‑LED). See docs/PROTOCOL.md §2.
-- **Connection model:** STM has `ip`/`mac`/`serial`, `connectedVia`
-  {LAN,USB,Gateway,RS232}, version V2/V3, up to 3 STMs per project.
+### Transport
+- `POST http://192.168.x.x:6680/ HTTP/1.1`
+- `Content-Type: application/x-www-form-urlencoded` (body is XML-RPC)
+- STM responds with `HTTP/1.0 200 OK` and a non-standard `Date` header line
+  (causes mitmproxy to reject without `--set validate_inbound_headers=false`).
 
-## Remaining unknowns (need ONE packet capture to finish)
+### Startup sequence (no auth)
+```
+service.stm.whoAreYou()
+  → {STM-Address:0, Facility-ID:"...", Device-ID:"[redacted-device-id]", Device-Name:"Steuermodul 0"}
 
-These live only in the main `PHC Systemsoftware V3.0.exe` (not yet decompiled):
+service.stm.readFile(0, 0, 1)   ← chunk 0
+  → {cur:0, total:2, crc:63006, bin:<base64 ZIP chunk>}
 
-1. The exact **TCP port** the STM v3 firmware listens on (6680 is the default).
-2. **Auth** — what `connect`/`activate` take (project password?).
-3. The exact **XML‑RPC parameter encoding** for `sendTelegram` / `getState` /
-   `getModule` (telegram likely a base64 string or int array).
-4. (Optional) LAN **discovery** payload — not required since the user enters the
-   STM IP manually.
+service.stm.readFile(0, 1, 1)   ← chunk 1
+  → {cur:1, total:2, crc:36691, bin:<base64 ZIP chunk>}
+```
+Concatenate the two base64-decoded blobs → ZIP archive containing:
+- `project.ppfx` — hardware config XML (modules, channels, `visu="true"` flags)
+- `project.tpfx` — automation logic XML (tools, input→output mappings)
+- `project.cpfx` — comfort/UI groupings XML
 
-## NEXT STEP — capture the iPhone↔STM traffic from the Mac
+### State polling (AMD modules only)
+```
+sendTelegram(stm_idx=0, module_bus_addr, content=1)
+  → [0, addr, toggle_echo, ?, state_bitmask]
+```
+`state_bitmask` has bit N set when output channel N is active.
+AMD bus address = `0x40 | dip`. Polled addresses observed: 64–78.
 
-The official app uses **plain HTTP XML‑RPC**, so an HTTP proxy reads the bodies
-directly. We do **not** need `rvictl` (it requires full Xcode; the user only has
-Command Line Tools → it fails with `bootstrap_look_up(): 1102`).
+### Light / outlet control
+```
+sendTelegram(0, 0x40|dip, (channel<<5)|com)
+```
+`com`: 2 = ON, 3 = OFF, 6 = toggle.
 
-### Procedure (mitmproxy as a Wi‑Fi proxy)
+### Shutter control (via input simulation)
+```
+simInputEvent(0, 2, emd_dip, event_type, emd_channel)
+```
+Events: 2 = press, 3 = long-press, 4 = release.
+- **Lower (down):** press(2) + longPress(3) on the `senken` EMD channel.
+- **Raise (up):**   press(2) + longPress(3) on the `heben` EMD channel.
+- **Stop:**         press(2) + release(4) on either channel.
 
-1. **Install:** `brew install mitmproxy`
-2. **Mac IP + start capture to a file:**
-   ```sh
-   ipconfig getifaddr en0          # Mac's Wi‑Fi IP (try en1 if blank)
-   mitmdump -p 8080 -w ~/Desktop/phc.flows
-   ```
-   Leave it running.
-3. **iPhone → Settings → Wi‑Fi → (ⓘ) → Configure Proxy → Manual:**
-   - Server = Mac IP from step 2, Port = `8080`, Authentication off → Save.
-4. **Drive the official PHC app:** open it, let it connect to the STM, toggle one
-   light on/off, move one shutter. Wait a few seconds.
-5. **Stop:** Ctrl‑C the mitmdump window; set iPhone **Configure Proxy → Off**
-   (or the phone loses internet once mitmproxy is closed).
-6. **Hand off `~/Desktop/phc.flows`** for analysis.
+### XML-RPC encoding
+- **Request:** standard `<methodCall>` XML, params as `<i4>` integers.
+- **Response for sendTelegram:** `<array>` of 5 `<i4>` values.
+- **Response for readFile:** `<struct>` with `cur`, `total`, `crc` (`<i4>`),
+  and `bin` (`<base64>`).
+- **Fault:** `<fault>` with `<string>` message.
 
-**Watch the mitmdump terminal while tapping:** you should see requests to the
-STM's IP (likely port `6680`).
-- If they appear → success, capture is good.
-- If the app works but nothing shows for the STM → it bypasses the proxy
-  (raw sockets). Fallback: install full Xcode, then
-  `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` and use
-  `rvictl -s <UDID>` + `sudo tcpdump -i rvi0 -w ~/Desktop/phc.pcap` instead.
+## Project file structure (`project.ppfx`)
 
-### Get the iPhone UDID (if needed for the rvictl fallback)
-Finder → iPhone in sidebar → click the small grey text under the device name to
-cycle it to the **UDID** → right‑click Copy. (`xcrun xctrace list devices` needs
-full Xcode.)
+XML schema:
+```
+<PROJECT name="[redacted-project]" ver="3.2.8">
+  <STM adr="0" ver="V3">
+    <MODS grp="Eingangsmodule">      ← EMD input modules (adr 0–N)
+      <MOD adr="N" name="EMD_RUE">
+        <CHAS grp="Eingang">
+          <CHA adr="C" visu="true">FLOOR : Rollo > NAME heben/senken</CHA>
+    <MODS grp="Ausgangsmodule">      ← AMD/JRM output modules (adr 0–N)
+      <MOD adr="N" name="AMD230_16|AMD230_4|JRM">
+        <CHAS grp="Ausgang">
+          <CHA adr="C" visu="true">FLOOR : Licht/Steckdose > NAME</CHA>
+```
 
-## After the capture
+Channel name convention: **`"N.ROOM : TYPE > LABEL"`**
+- N = sort index (0 = KG, 1 = Einlieger, 2 = EG, 3 = DG, 4 = Außen)
+- TYPE → DeviceKind: `Licht`→light, `Steckdose`→outlet, `Rollo`→shutter
 
-1. Decode port + auth + `sendTelegram`/`getState` param formats from `phc.flows`.
-2. Implement the XML‑RPC wire calls in `STMv3Client` (connect→activate→getState,
-   `sendTelegram(bytes)`, event handling).
-3. Add a connection settings screen (STM IP + password) and a toggle to switch
-   `HomeStore` from `MockPHCClient` to `STMv3Client`.
-4. Map a real project (`getModule`/`getState`) into rooms/devices.
+Module bus address:
+- AMD: `0x40 | adr`
+- JRM: `0x60 | adr` (not polled; shutters controlled via simInputEvent)
+- EMD: `adr` (used only in simInputEvent, not sendTelegram)
+
+Actual modules in this installation:
+```
+Ausgangsmodule:
+  adr 0  AMD230_4   → bus 64   (2.EG lights/living)
+  adr 1  AMD230_16  → bus 65   (2.EG lights/guest/office/bath)
+  adr 2  AMD230_16  → bus 66   (2.EG lights/outdoor/outlets)
+  adr 3  AMD230_16  → bus 67   (2.EG outlets + reserve)
+  adr 4  JRM        → bus 100  (shutters)
+  adr 5  JRM        → bus 101  (shutters)
+  adr 6  JRM        → bus 102  (shutters)
+  adr 7  AMD230_4   → bus 71   (3.DG lights)
+  adr 8  AMD230_16  → bus 72   (3.DG lights)
+  adr 9  AMD230_16  → bus 73   (3.DG outlets)
+  adr 10 JRM        → bus 106  (shutters)
+  adr 11 JRM        → bus 107  (shutters)
+  adr 12 AMD230_4   → bus 76   (1.Einlieger lights)
+  adr 13 AMD230_16  → bus 77   (1.Einlieger lights)
+  adr 14 AMD230_16  → bus 78   (0.KG pump + reserve)
+```
+
+## NEXT STEP — fix ZIP decompression
+
+The `inflateDeflate` helper in `STMv3Client.swift` prepends a zlib header
+(`0x78 0x9C`) to the raw deflate stream before calling
+`NSData.decompressed(using: .zlib)`. This may be wrong if the ZIP uses
+a different deflate variant or the Adler-32 checksum appended is invalid.
+
+A new proxy capture of the **new app** (not the old one) against the STM has
+been taken and will be analysed next to verify the exact ZIP bytes and fix
+the decompressor.
+
+**After fixing decompression:**
+1. Test `loadProject` on real device — should produce real rooms/devices.
+2. Wire up start-polling after project load.
+3. Test `setPower` / `simInputEvent` shutter control on real hardware.
+4. Add shutter state polling (EMD modules return position somehow — TBD).
+5. Persist STM IP properly; add disconnect/reconnect flow.
 
 ## Build / run
 
@@ -117,13 +161,15 @@ full Xcode.)
 brew install xcodegen   # one time
 xcodegen generate && open PHCRemoteControl.xcodeproj
 ```
-Runs against the mock with no hardware. Source under `Sources/`; the app can't be
-compiled in the cloud Linux env — build on the Mac.
 
-## Reference material (local only, NOT committed — proprietary)
+Select an iPhone simulator → ⌘R. Runs against `MockPHCClient` with no hardware.
 
-Decompiled/extracted under `/tmp` during the session (gone after the container is
-reclaimed): PHC Systemsoftware V2.70 `iserver.exe`, V3.0 `toolframework.jar`
-(Procyon‑decompiled), `rs232_interface.exe`, `functions.xml`, `modules.xml`. The
-ESPHome‑PHC‑Controller repo is the open reference for the RS‑485 bus protocol.
-</content>
+**To run on real iPhone:** Xcode → target → Signing & Capabilities →
+Automatically manage signing → set Team to your Apple ID → select iPhone.
+
+## Reference files (local, committed)
+
+- `project/project.ppfx` — hardware module/channel config for this installation
+- `project/project.tpfx` — automation logic (input→output tool mappings)
+- `project/project.cpfx` — comfort UI groupings
+- `project.zip` — raw ZIP from STM readFile (the two base64 chunks combined)

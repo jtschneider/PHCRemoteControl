@@ -76,4 +76,4 @@ enum PHCTelegram {
         frame(address: address, toggle: toggle, content: [0x00])
     }
 }
-</content>
+
