@@ -180,11 +180,14 @@ private final class Parser: NSObject, XMLParserDelegate {
         var devices: [UUID: Device] = [:]
 
         for (roomName, entry) in sortedRooms {
-            // Within a floor, order devices by name (natural/numeric) rather than by
-            // wiring order — devices on adjacent module channels aren't necessarily
-            // physically close. Floor order itself stays by sort index above.
+            // Within a floor, group devices by category (lights → shutters → outlets …)
+            // then sort alphabetically (natural/numeric) within each category. Wiring
+            // order is ignored since adjacent module channels aren't physically close.
+            // Floor order itself stays by sort index above.
             let roomDevices = entry.devices.sorted {
-                $0.name.localizedStandardCompare($1.name) == .orderedAscending
+                let r0 = kindSortRank($0.kind), r1 = kindSortRank($1.kind)
+                if r0 != r1 { return r0 < r1 }
+                return $0.name.localizedStandardCompare($1.name) == .orderedAscending
             }
             let room = Room(
                 name: roomName,
@@ -250,6 +253,18 @@ private final class Parser: NSObject, XMLParserDelegate {
         case "Pumpe":      return .outlet
         case "Rollo":      return .shutter
         default:           return .light
+        }
+    }
+
+    /// Display order of device categories within a floor: lights, then shutters,
+    /// then outlets, then everything else.
+    private func kindSortRank(_ kind: DeviceKind) -> Int {
+        switch kind {
+        case .light:   return 0
+        case .dimmer:  return 1
+        case .shutter: return 2
+        case .outlet:  return 3
+        case .scene:   return 4
         }
     }
 
