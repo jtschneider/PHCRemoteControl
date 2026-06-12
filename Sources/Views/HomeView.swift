@@ -171,8 +171,12 @@ struct FloorView: View {
             if isCollapsed { collapsed.remove(group.id) } else { collapsed.insert(group.id) }
         } label: {
             HStack(spacing: 8) {
-                Label("\(group.title) (\(group.devices.count))", systemImage: group.symbol)
-                    .font(.headline)
+                Label {
+                    Text(group.title) + Text(verbatim: " (\(group.devices.count))")
+                } icon: {
+                    Image(systemName: group.symbol)
+                }
+                .font(.headline)
                 Spacer()
                 Image(systemName: "chevron.down")
                     .font(.subheadline.weight(.semibold))
@@ -188,10 +192,13 @@ struct FloorView: View {
 
 /// Devices in a room grouped into a display category (lights, shutters, …).
 struct DeviceGroup: Identifiable {
-    let id: String          // category title, also the stable identity
-    let title: String
+    /// Stable English identity (also the localization key): "Lights", "Shutters", …
+    let id: String
     let symbol: String
     let devices: [Device]
+
+    /// Localized category heading, looked up from `id` via the String Catalog.
+    var title: LocalizedStringKey { LocalizedStringKey(id) }
 
     /// Buckets pre-sorted devices into ordered category groups, preserving the
     /// incoming order (lights → shutters → outlets …, already sorted by name).
@@ -203,7 +210,7 @@ struct DeviceGroup: Identifiable {
             if buckets[title] == nil { order.append(title) }
             buckets[title, default: []].append(device)
         }
-        return order.map { DeviceGroup(id: $0, title: $0, symbol: symbol(for: $0), devices: buckets[$0]!) }
+        return order.map { DeviceGroup(id: $0, symbol: symbol(for: $0), devices: buckets[$0]!) }
     }
 
     private static func categoryTitle(for kind: DeviceKind) -> String {

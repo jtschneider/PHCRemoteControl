@@ -1,0 +1,126 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Activate" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktivieren" } }
+      }
+    },
+    "Brightness" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Helligkeit" } }
+      }
+    },
+    "Can't reach the PHC" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "PHC nicht erreichbar" } }
+      }
+    },
+    "Close shutter" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Herunterfahren" } }
+      }
+    },
+    "Closing…" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Herunterfahren…" } }
+      }
+    },
+    "Collapse All" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle einklappen" } }
+      }
+    },
+    "Connect to STM" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mit STM verbinden" } }
+      }
+    },
+    "Connecting…" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verbinden…" } }
+      }
+    },
+    "Demo Mode (no hardware)" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Demo-Modus (ohne Hardware)" } }
+      }
+    },
+    "Disconnect" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Trennen" } }
+      }
+    },
+    "Enter the IP address of your PHC control unit (STM). Port 6680 is used automatically." : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gib die IP-Adresse deiner PHC-Steuereinheit (STM) ein. Port 6680 wird automatisch verwendet." } }
+      }
+    },
+    "Expand All" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle ausklappen" } }
+      }
+    },
+    "Floors" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stockwerke" } }
+      }
+    },
+    "Lights" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Deckenlichter" } }
+      }
+    },
+    "On" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein" } }
+      }
+    },
+    "Open shutter" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hochfahren" } }
+      }
+    },
+    "Opening…" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hochfahren…" } }
+      }
+    },
+    "Outlets" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Steckdosen" } }
+      }
+    },
+    "Reload from STM" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Von STM neu laden" } }
+      }
+    },
+    "Scenes" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Szenen" } }
+      }
+    },
+    "Select a floor" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stockwerk auswählen" } }
+      }
+    },
+    "Shutters" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rollläden" } }
+      }
+    },
+    "Stop shutter" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stoppen" } }
+      }
+    },
+    "STM IP Address" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "STM-IP-Adresse" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -125,10 +125,19 @@ private struct ShutterControl: View {
         }
         .buttonStyle(.bordered)
         .tint(device.state.shutterMoving == command ? .accentColor : nil)
+        .accessibilityLabel(accessibilityLabel(command))
+    }
+
+    private func accessibilityLabel(_ command: ShutterCommand) -> LocalizedStringKey {
+        switch command {
+        case .up:   return "Open shutter"
+        case .stop: return "Stop shutter"
+        case .down: return "Close shutter"
+        }
     }
 
     /// Last command in flight, or nil when idle (no sensor to report otherwise).
-    private var statusText: String? {
+    private var statusText: LocalizedStringKey? {
         switch device.state.shutterMoving {
         case .up: return "Opening…"
         case .down: return "Closing…"
