@@ -26,15 +26,23 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
     private let session: URLSession
     private var pollTask: Task<Void, Never>?
 
-    /// Devices we know about, populated by loadProject. Used by the poll loop
-    /// to emit StateUpdates when module state changes.
+    /// One pollable output channel on an AMD module.
+    private struct PolledChannel { let channel: Int; let id: UUID }
+
+    /// AMD output modules to poll, keyed by bus address → its channels.
+    /// Populated by loadProject; one telegram per module reads all its channels.
     private let lock = NSLock()
-    private var knownDevices: [ChannelRef: UUID] = [:]   // ref → Device.id
+    private var polledModules: [Int: [PolledChannel]] = [:]
 
     init(endpoint: Endpoint) {
         (self.events, self.continuation) = AsyncStream.makeStream()
         self.endpoint = endpoint
         self.session = URLSession(configuration: .ephemeral)
+    }
+
+    deinit {
+        pollTask?.cancel()
+        continuation.finish()
     }
 
     func connect() async throws {
@@ -115,11 +123,16 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
 
     // MARK: - State polling
 
-    /// Register devices so the poll loop can emit events for them.
+    /// Register devices so the poll loop can read their module state. Only AMD
+    /// outputs (lights/outlets) report on/off via the bitmask telegram; shutters
+    /// (EMD inputs) and scenes have no pollable state and are skipped.
     func registerDevices(_ devices: [Device]) {
         lock.lock(); defer { lock.unlock() }
+        polledModules.removeAll()
         for device in devices {
-            if let ref = device.ref { knownDevices[ref] = device.id }
+            guard let ref = device.ref, ref.moduleClass == .amd else { continue }
+            polledModules[ref.busAddress, default: []].append(
+                PolledChannel(channel: ref.channel, id: device.id))
         }
     }
 
@@ -128,19 +141,26 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
         pollTask = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.pollOnce()
-                try? await Task.sleep(for: .seconds(1))
+                try? await Task.sleep(for: .seconds(2.5))
             }
         }
     }
 
+    func stopPolling() {
+        pollTask?.cancel()
+        pollTask = nil
+    }
+
+    /// Poll each AMD module once and emit on/off updates for all its channels.
     private func pollOnce() async {
-        let refs = lock.withLock { Array(knownDevices.keys) }
-        for ref in refs {
+        let modules = lock.withLock { polledModules }
+        for (busAddress, channels) in modules {
             guard !Task.isCancelled else { return }
-            guard let state = try? await getState(ref) else { continue }
-            let id = lock.withLock { knownDevices[ref] }
-            if let id {
-                continuation.yield(StateUpdate(deviceID: id, state: state))
+            guard let bitmask = try? await readModuleState(busAddress) else { continue }
+            for ch in channels {
+                var state = DeviceState()
+                state.isOn = (bitmask >> ch.channel) & 1 == 1
+                continuation.yield(StateUpdate(deviceID: ch.id, state: state))
             }
         }
     }
@@ -155,13 +175,10 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
         return result.intArray
     }
 
-    /// Read a module's state bitmask by sending the getState content byte (1).
-    private func getState(_ ref: ChannelRef) async throws -> DeviceState {
-        let response = try await sendTelegram(moduleAddr: ref.busAddress, content: 0x01)
-        let bitmask = response.last ?? 0
-        var state = DeviceState()
-        state.isOn = (bitmask >> ref.channel) & 1 == 1
-        return state
+    /// sendTelegram(0, busAddr, 1) → [..., state_bitmask]; bit N = channel N active.
+    private func readModuleState(_ busAddress: Int) async throws -> Int {
+        let response = try await sendTelegram(moduleAddr: busAddress, content: 0x01)
+        return response.last ?? 0
     }
 
     /// simInputEvent(stm_idx=0, emd_module, channel, event_type, key_type=4)

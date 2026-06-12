@@ -36,6 +36,7 @@ final class HomeStore {
             try await client.connect()
             project = try await client.loadProject()
             phase = .ready
+            client.startPolling()   // keep light/outlet state in sync with the bus
         } catch {
             phase = .failed(error.localizedDescription)
         }

@@ -44,6 +44,10 @@ final class MockPHCClient: PHCClient, @unchecked Sendable {
         }
     }
 
+    // The mock pushes state changes itself, so polling is a no-op.
+    func startPolling() {}
+    func stopPolling() {}
+
     // MARK: - Simulation
 
     /// Animate a shutter toward fully open/closed, streaming position updates.

@@ -22,6 +22,13 @@ protocol PHCClient: AnyObject, Sendable {
     /// Drive a shutter up / stop / down.
     func moveShutter(_ ref: ChannelRef, _ command: ShutterCommand) async throws
 
+    /// Begin periodically polling output state (lights/outlets) from the control
+    /// unit. No-op for clients that already push their own state.
+    func startPolling()
+
+    /// Stop the polling loop.
+    func stopPolling()
+
     /// Live state changes pushed from the bus.
     var events: AsyncStream<StateUpdate> { get }
 }
