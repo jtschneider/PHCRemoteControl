@@ -86,12 +86,13 @@ Param layout confirmed by capturing the official app on two shutters
 - `channel`    = EMD channel adr (`CHA adr`).
 - `key_type`   = constant **4** (EMD_RUE rocker input).
 
-Events: 2 = press, 3 = long-press, 4 = release, 5 = doublePress ("click confirmed").
-A long hold starts movement; a short tap (which the firmware reports as
-press→release→doublePress) halts the motor in either direction.
-- **Lower (down):** press(2) + longPress(3) on the `senken` channel.
-- **Raise (up):**   press(2) + longPress(3) on the `heben` channel.
-- **Stop:**         press(2) + release(4) + doublePress(5) on the `senken` channel.
+Events: 2 = press, 3 = long-press, 4 = release, 5 = doublePress.
+Verified on hardware: a **short tap** (press→release→doublePress) STARTS the
+motor in that channel's direction; a **long press** (press→longPress) STOPS it
+(and is a no-op when the blind is idle).
+- **Lower (down):** press(2) + release(4) + doublePress(5) on the `senken` channel.
+- **Raise (up):**   press(2) + release(4) + doublePress(5) on the `heben` channel.
+- **Stop:**         press(2) + longPress(3) on the `senken` channel.
 
 ### XML-RPC encoding
 - **Request:** standard `<methodCall>` XML, params as `<i4>` integers.

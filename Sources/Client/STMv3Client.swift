@@ -88,24 +88,29 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
     }
 
     func moveShutterFull(downRef: ChannelRef, upRef: ChannelRef?, command: ShutterCommand) async throws {
-        // Confirmed by capture of the official app (shutter A, EMD module 2):
-        //   MOVE (long hold): press(2) → longPress(3) on the direction's channel
-        //   STOP (short tap):  press(2) → release(4) → doublePress(5) — event 5 is the
-        //                      "click confirmed" pulse that halts the motor in either direction.
+        // Verified on real hardware (shutter A + shutter B):
+        //   MOVE (short tap):  press(2) → release(4) → doublePress(5) on the direction's
+        //                      channel — starts the motor in that direction.
+        //   STOP (long hold):  press(2) → longPress(3) on either channel — halts the
+        //                      motor; a no-op when the blind is already idle.
         switch command {
         case .down:
+            try await tapMove(downRef)
+        case .up:
+            try await tapMove(upRef ?? downRef)
+        case .stop:
+            // A long press on the senken (down) channel stops motion in either direction.
             try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .press)
             try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .longPress)
-        case .up:
-            let target = upRef ?? downRef
-            try await simInputEvent(emdModule: target.dip, channel: target.channel, event: .press)
-            try await simInputEvent(emdModule: target.dip, channel: target.channel, event: .longPress)
-        case .stop:
-            // A short tap on the senken (down) channel stops motion regardless of direction.
-            try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .press)
-            try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .release)
-            try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .doublePress)
         }
+    }
+
+    /// A short tap on an EMD channel: press → release → doublePress, which starts the
+    /// shutter motor in that channel's direction.
+    private func tapMove(_ ref: ChannelRef) async throws {
+        try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .press)
+        try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .release)
+        try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .doublePress)
     }
 
     // MARK: - State polling
