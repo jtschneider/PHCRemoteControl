@@ -89,7 +89,11 @@ private struct DimmerControl: View {
     }
 }
 
-/// Up / stop / down controls plus a position readout for a shutter.
+/// Up / stop / down controls for a shutter.
+///
+/// PHC JRM shutter modules are plain up/down/stop relays with no position
+/// feedback, so there is no percentage to show — only the last command sent
+/// (Opening…/Closing…), which clears when you press Stop.
 private struct ShutterControl: View {
     @Environment(HomeStore.self) private var store
     let device: Device
@@ -101,10 +105,12 @@ private struct ShutterControl: View {
                 shutterButton(.stop, "stop.fill")
                 shutterButton(.down, "chevron.down")
             }
-            HStack {
-                Text(statusText).font(.caption).foregroundStyle(.secondary)
-                Spacer()
-                Text("\(device.state.shutterPosition)% open").font(.caption.monospacedDigit())
+            if let statusText {
+                HStack {
+                    ProgressView().controlSize(.mini)
+                    Text(statusText).font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                }
             }
         }
     }
@@ -121,11 +127,12 @@ private struct ShutterControl: View {
         .tint(device.state.shutterMoving == command ? .accentColor : nil)
     }
 
-    private var statusText: String {
+    /// Last command in flight, or nil when idle (no sensor to report otherwise).
+    private var statusText: String? {
         switch device.state.shutterMoving {
         case .up: return "Opening…"
         case .down: return "Closing…"
-        case .stop, .none: return "Idle"
+        case .stop, .none: return nil
         }
     }
 }

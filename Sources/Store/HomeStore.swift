@@ -18,6 +18,8 @@ final class HomeStore {
 
     private let client: PHCClient
     private var eventTask: Task<Void, Never>?
+    /// Pending "command sent" indicator clears, keyed by device id.
+    private var shutterClearTasks: [UUID: Task<Void, Never>] = [:]
 
     init(client: PHCClient = MockPHCClient()) {
         self.client = client
@@ -79,7 +81,21 @@ final class HomeStore {
 
     func moveShutter(_ device: Device, _ command: ShutterCommand) {
         guard let ref = device.ref else { return }
-        project?.devices[device.id]?.state.shutterMoving = (command == .stop) ? nil : command
+        let id = device.id
+
+        // Optimistic "command sent" indicator. There is no position/movement
+        // feedback from PHC shutters, so for up/down we show the indicator
+        // briefly and auto-clear it; stop clears immediately.
+        shutterClearTasks[id]?.cancel()
+        project?.devices[id]?.state.shutterMoving = (command == .stop) ? nil : command
+        if command != .stop {
+            shutterClearTasks[id] = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(4))
+                guard !Task.isCancelled else { return }
+                self?.project?.devices[id]?.state.shutterMoving = nil
+            }
+        }
+
         let upRef = device.shutterUpRef
         Task {
             do {
