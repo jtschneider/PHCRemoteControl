@@ -159,14 +159,16 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
         return state
     }
 
-    /// simInputEvent(stm_idx=0, class=2, channel, event_type, emd_module)
+    /// simInputEvent(stm_idx=0, emd_module, channel, event_type, key_type=4)
     ///
-    /// Param order confirmed by capture (shutter A): param3 = channel address (CHA adr),
-    /// param5 = the EMD module's simInputEvent address. That address is the ppfx module
-    /// adr × 2 (module 2 → 4, verified for shutter A). Other modules need confirmation.
+    /// Param layout confirmed by captures of the official app on two shutters:
+    ///   • shutter A → module 2, channels 4/5: [0, 2, 5|4, event, 4]
+    ///   • shutter B → module 3, channels 10/11: [0, 3, 11|10, event, 4]
+    /// So param2 = EMD module adr (raw ppfx adr), param3 = channel (CHA adr),
+    /// param5 = 4 (a constant EMD key-type for EMD_RUE rocker inputs).
     private func simInputEvent(emdModule: Int, channel: Int, event: InputEvent) async throws {
         _ = try await call(method: "service.stm.simInputEvent",
-                           params: [.int(0), .int(2), .int(channel), .int(event.rawValue), .int(emdModule * 2)])
+                           params: [.int(0), .int(emdModule), .int(channel), .int(event.rawValue), .int(4)])
     }
 
     // MARK: - XML-RPC transport

@@ -78,12 +78,20 @@ sendTelegram(0, 0x40|dip, (channel<<5)|com)
 
 ### Shutter control (via input simulation)
 ```
-simInputEvent(0, 2, emd_dip, event_type, emd_channel)
+simInputEvent(stm=0, emd_module, channel, event_type, key_type=4)
 ```
-Events: 2 = press, 3 = long-press, 4 = release.
-- **Lower (down):** press(2) + longPress(3) on the `senken` EMD channel.
-- **Raise (up):**   press(2) + longPress(3) on the `heben` EMD channel.
-- **Stop:**         press(2) + release(4) on either channel.
+Param layout confirmed by capturing the official app on two shutters
+(shutter A → module 2, channels 4/5; shutter B → module 3, channels 10/11):
+- `emd_module` = EMD module adr (raw ppfx `MOD adr`).
+- `channel`    = EMD channel adr (`CHA adr`).
+- `key_type`   = constant **4** (EMD_RUE rocker input).
+
+Events: 2 = press, 3 = long-press, 4 = release, 5 = doublePress ("click confirmed").
+A long hold starts movement; a short tap (which the firmware reports as
+press→release→doublePress) halts the motor in either direction.
+- **Lower (down):** press(2) + longPress(3) on the `senken` channel.
+- **Raise (up):**   press(2) + longPress(3) on the `heben` channel.
+- **Stop:**         press(2) + release(4) + doublePress(5) on the `senken` channel.
 
 ### XML-RPC encoding
 - **Request:** standard `<methodCall>` XML, params as `<i4>` integers.
