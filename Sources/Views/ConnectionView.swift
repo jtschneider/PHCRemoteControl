@@ -13,6 +13,18 @@ struct ConnectionView: View {
         NavigationStack {
             Form {
                 Section {
+                    Image("Logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 104, height: 104)
+                        .clipShape(RoundedRectangle(cornerRadius: 23, style: .continuous))
+                        .shadow(color: .black.opacity(0.15), radius: 5, y: 2)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+                .listRowBackground(Color.clear)
+
+                Section {
                     HStack {
                         Image(systemName: "network")
                             .foregroundStyle(.secondary)
