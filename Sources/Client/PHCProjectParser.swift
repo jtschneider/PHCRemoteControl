@@ -180,7 +180,12 @@ private final class Parser: NSObject, XMLParserDelegate {
         var devices: [UUID: Device] = [:]
 
         for (roomName, entry) in sortedRooms {
-            let roomDevices = entry.devices
+            // Within a floor, order devices by name (natural/numeric) rather than by
+            // wiring order — devices on adjacent module channels aren't necessarily
+            // physically close. Floor order itself stays by sort index above.
+            let roomDevices = entry.devices.sorted {
+                $0.name.localizedStandardCompare($1.name) == .orderedAscending
+            }
             let room = Room(
                 name: roomName,
                 symbol: roomSymbol(for: roomName),
