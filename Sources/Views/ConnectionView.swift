@@ -62,7 +62,7 @@ struct ConnectionView: View {
                 }
                 .listRowBackground(Color.clear)
             }
-            .navigationTitle("PHC Remote Control")
+            .navigationTitle("PHC Remote")
             .onAppear {
                 editing = host
                 focused = host.isEmpty
