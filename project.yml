@@ -5,12 +5,19 @@ options:
     iOS: "17.0"
   createIntermediateGroups: true
 
+packages:
+  ZIPFoundation:
+    url: https://github.com/weichsel/ZIPFoundation
+    from: "0.9.19"
+
 targets:
   PHCRemoteControl:
     type: application
     platform: iOS
     sources:
       - Sources
+    dependencies:
+      - package: ZIPFoundation
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.PHCRemoteControl
@@ -25,6 +32,3 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         CODE_SIGN_IDENTITY: ""
         CODE_SIGNING_REQUIRED: NO
-    dependencies:
-      - sdk: libcompression.tbd
-

@@ -1,5 +1,5 @@
 import Foundation
-import Compression
+import ZIPFoundation
 
 /// Real transport to a networked STM control unit over its XML-RPC interface.
 ///
@@ -215,101 +215,19 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
 
     // MARK: - ZIP extraction
 
-    /// Extracts the raw bytes of `project.ppfx` from the ZIP returned by readFile.
-    /// Uses a minimal ZIP local-file-header parser — no external dependency needed.
+    /// Extracts `project.ppfx` from the ZIP returned by the STM's readFile calls.
+    /// Uses ZIPFoundation which reads the central directory (end of file) and handles
+    /// data descriptors, bit-3 flags, and raw DEFLATE correctly.
     private func extractPPFX(from zip: Data) throws -> Data {
-        return try extractZipEntry(named: "project.ppfx", from: zip)
-    }
-
-    private func extractZipEntry(named target: String, from zip: Data) throws -> Data {
-        var offset = 0
-        while offset + 30 < zip.count {
-            guard zip[offset] == 0x50, zip[offset+1] == 0x4B,
-                  zip[offset+2] == 0x03, zip[offset+3] == 0x04 else { break }
-
-            let flags       = UInt16(zip[offset+6])  | UInt16(zip[offset+7])  << 8
-            let compression = UInt16(zip[offset+8])  | UInt16(zip[offset+9])  << 8
-            var cSize       = Int(UInt32(zip[offset+18]) | UInt32(zip[offset+19]) << 8
-                                | UInt32(zip[offset+20]) << 16 | UInt32(zip[offset+21]) << 24)
-            var uSize       = Int(UInt32(zip[offset+22]) | UInt32(zip[offset+23]) << 8
-                                | UInt32(zip[offset+24]) << 16 | UInt32(zip[offset+25]) << 24)
-            let nameLen     = Int(UInt16(zip[offset+26]) | UInt16(zip[offset+27]) << 8)
-            let extraLen    = Int(UInt16(zip[offset+28]) | UInt16(zip[offset+29]) << 8)
-
-            let nameStart = offset + 30
-            let nameEnd   = nameStart + nameLen
-            guard nameEnd <= zip.count else { break }
-
-            let name = String(bytes: zip[nameStart..<nameEnd], encoding: .utf8) ?? ""
-            let dataStart = nameEnd + extraLen
-
-            // When bit 3 is set, cSize/uSize in the local header are 0.
-            // The real values are in the data descriptor (PK\x07\x08) that follows the data.
-            var nextEntryOffset: Int
-            if (flags & 0x08) != 0, let ddOffset = findDataDescriptor(in: zip, from: dataStart) {
-                cSize = Int(UInt32(zip[ddOffset+8])  | UInt32(zip[ddOffset+9])  << 8
-                          | UInt32(zip[ddOffset+10]) << 16 | UInt32(zip[ddOffset+11]) << 24)
-                uSize = Int(UInt32(zip[ddOffset+12]) | UInt32(zip[ddOffset+13]) << 8
-                          | UInt32(zip[ddOffset+14]) << 16 | UInt32(zip[ddOffset+15]) << 24)
-                nextEntryOffset = ddOffset + 16
-            } else {
-                nextEntryOffset = dataStart + cSize
-            }
-
-            let dataEnd = dataStart + cSize
-            guard dataEnd <= zip.count else { break }
-
-            if name == target {
-                let compressed = Data(zip[dataStart..<dataEnd])
-                if compression == 0 {
-                    return compressed
-                } else if compression == 8 {
-                    return try inflateDeflate(compressed, expectedSize: uSize)
-                } else {
-                    throw PHCClientError.transport("Unsupported ZIP compression \(compression) for \(name)")
-                }
-            }
-            offset = nextEntryOffset
+        guard let archive = Archive(data: zip, accessMode: .read) else {
+            throw PHCClientError.transport("Could not open project ZIP archive")
         }
-        throw PHCClientError.transport("project.ppfx not found in ZIP")
-    }
-
-    /// Scan forward from `start` for the data descriptor signature PK\x07\x08.
-    private func findDataDescriptor(in zip: Data, from start: Int) -> Int? {
-        guard start + 15 < zip.count else { return nil }
-        for i in start ..< zip.count - 15 {
-            if zip[i] == 0x50 && zip[i+1] == 0x4B && zip[i+2] == 0x07 && zip[i+3] == 0x08 {
-                return i
-            }
+        guard let entry = archive["project.ppfx"] else {
+            throw PHCClientError.transport("project.ppfx not found in ZIP")
         }
-        return nil
-    }
-
-    private func inflateDeflate(_ data: Data, expectedSize: Int) throws -> Data {
-        guard !data.isEmpty else {
-            throw PHCClientError.transport("ZIP deflate: empty compressed data")
-        }
-        // ZIP uses raw DEFLATE (RFC 1951) — no zlib header or Adler-32.
-        // 0x600 = COMPRESSION_DEFLATE; the named constant isn't exported through the Swift
-        // Compression module overlay, so we use the raw integer value directly.
-        let bufSize = expectedSize > 0 ? expectedSize : data.count * 6
-        var output = Data(count: bufSize)
-        let written = output.withUnsafeMutableBytes { outPtr in
-            data.withUnsafeBytes { inPtr in
-                compression_decode_buffer(
-                    outPtr.baseAddress!.assumingMemoryBound(to: UInt8.self),
-                    bufSize,
-                    inPtr.baseAddress!.assumingMemoryBound(to: UInt8.self),
-                    inPtr.count,
-                    nil,
-                    compression_algorithm(rawValue: UInt32(0x600))  // COMPRESSION_DEFLATE
-                )
-            }
-        }
-        guard written > 0 else {
-            throw PHCClientError.transport("ZIP deflate decompression failed")
-        }
-        return output.prefix(written)
+        var result = Data()
+        _ = try archive.extract(entry) { result.append($0) }
+        return result
     }
 }
 
