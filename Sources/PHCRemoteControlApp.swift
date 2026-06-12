@@ -8,16 +8,9 @@ struct PHCRemoteControlApp: App {
     var body: some Scene {
         WindowGroup {
             if let store {
-                HomeView()
+                HomeView(onDisconnect: { self.store = nil })
                     .environment(store)
                     .onAppear { store.start() }
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button("Disconnect", systemImage: "xmark.circle") {
-                                self.store = nil
-                            }
-                        }
-                    }
             } else {
                 ConnectionView { host in
                     if let host {

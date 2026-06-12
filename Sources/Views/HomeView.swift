@@ -1,41 +1,79 @@
 import SwiftUI
 
-/// Top-level adaptive layout: rooms in the sidebar, a grid of device cards in
-/// the detail pane. Uses `NavigationSplitView` so it feels right on iPad and
-/// collapses to a navigation stack on iPhone.
+/// Top-level adaptive layout.
+///
+/// • iPhone (compact): a `NavigationStack` showing the floor overview that
+///   pushes to a room's device grid — classic slide transition, correct back
+///   behaviour, and no floor pre-selected.
+/// • iPad (regular): a `NavigationSplitView` with the floors in a persistent
+///   sidebar and the selected room's devices in the detail pane.
 struct HomeView: View {
     @Environment(HomeStore.self) private var store
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var selectedRoom: Room.ID?
 
+    /// Invoked when the user taps Disconnect; the App tears down the store.
+    var onDisconnect: () -> Void = {}
+
     var body: some View {
-        NavigationSplitView {
-            sidebar
-        } detail: {
-            detail
+        if sizeClass == .compact {
+            NavigationStack { stackSidebar }
+        } else {
+            NavigationSplitView {
+                splitSidebar
+            } detail: {
+                detail
+            }
         }
     }
 
+    private var disconnectButton: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button("Disconnect", systemImage: "xmark.circle", action: onDisconnect)
+        }
+    }
+
+    // MARK: iPhone — navigation stack
+
     @ViewBuilder
-    private var sidebar: some View {
-        Group {
-            switch store.phase {
-            case .connecting:
-                ProgressView("Connecting…")
-            case .failed(let message):
-                ContentUnavailableView("Can't reach the PHC", systemImage: "wifi.exclamationmark", description: Text(message))
-            case .ready:
-                if let project = store.project {
-                    List(selection: $selectedRoom) {
-                        Section("Rooms") {
-                            ForEach(project.rooms) { room in
-                                Label(room.name, systemImage: room.symbol).tag(room.id)
-                            }
+    private var stackSidebar: some View {
+        phaseContent { project in
+            List {
+                Section("Rooms") {
+                    ForEach(project.rooms) { room in
+                        NavigationLink(value: room.id) {
+                            Label(room.name, systemImage: room.symbol)
                         }
                     }
-                    .navigationTitle(project.name)
-                    .onAppear { selectedRoom = selectedRoom ?? project.rooms.first?.id }
                 }
             }
+            .navigationTitle(project.name)
+            .navigationDestination(for: Room.ID.self) { id in
+                if let room = project.rooms.first(where: { $0.id == id }) {
+                    RoomView(room: room)
+                }
+            }
+            .toolbar { disconnectButton }
+        }
+    }
+
+    // MARK: iPad — split view
+
+    @ViewBuilder
+    private var splitSidebar: some View {
+        phaseContent { project in
+            List(selection: $selectedRoom) {
+                Section("Rooms") {
+                    ForEach(project.rooms) { room in
+                        Label(room.name, systemImage: room.symbol).tag(room.id)
+                    }
+                }
+            }
+            .navigationTitle(project.name)
+            .toolbar { disconnectButton }
+            // Pre-selecting a room only makes sense on iPad, where the detail
+            // pane is always visible alongside the sidebar.
+            .onAppear { selectedRoom = selectedRoom ?? project.rooms.first?.id }
         }
     }
 
@@ -46,6 +84,22 @@ struct HomeView: View {
             RoomView(room: room)
         } else {
             ContentUnavailableView("Select a room", systemImage: "house")
+        }
+    }
+
+    // MARK: Shared phase handling
+
+    @ViewBuilder
+    private func phaseContent<Content: View>(@ViewBuilder _ content: (PHCProject) -> Content) -> some View {
+        switch store.phase {
+        case .connecting:
+            ProgressView("Connecting…")
+        case .failed(let message):
+            ContentUnavailableView("Can't reach the PHC", systemImage: "wifi.exclamationmark", description: Text(message))
+        case .ready:
+            if let project = store.project {
+                content(project)
+            }
         }
     }
 }
@@ -67,6 +121,7 @@ struct RoomView: View {
             .padding()
         }
         .navigationTitle(room.name)
+        .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemGroupedBackground))
     }
 }
@@ -77,4 +132,3 @@ struct RoomView: View {
         .environment(store)
         .onAppear { store.start() }
 }
-
