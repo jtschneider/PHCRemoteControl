@@ -17,12 +17,16 @@ final class HomeStore {
     private(set) var project: PHCProject?
 
     private let client: PHCClient
+    /// Cache key (the STM host) for persisting the project; nil disables caching.
+    private let cacheKey: String?
     private var eventTask: Task<Void, Never>?
+    private var cacheSaveTask: Task<Void, Never>?
     /// Pending "command sent" indicator clears, keyed by device id.
     private var shutterClearTasks: [UUID: Task<Void, Never>] = [:]
 
-    init(client: PHCClient = MockPHCClient()) {
+    init(client: PHCClient = MockPHCClient(), cacheKey: String? = nil) {
         self.client = client
+        self.cacheKey = cacheKey
     }
 
     func start() {
@@ -32,13 +36,44 @@ final class HomeStore {
     }
 
     private func load() async {
+        // Start instantly from the cached project if we have one for this host;
+        // the structure rarely changes, so we skip the expensive ZIP download.
+        if let cacheKey, let cached = ProjectCache.load(key: cacheKey) {
+            project = cached
+            phase = .ready
+        }
         do {
             try await client.connect()
-            project = try await client.loadProject()
-            phase = .ready
-            client.startPolling()   // keep light/outlet state in sync with the bus
+            if project == nil {
+                // First run for this host: download and cache the full project.
+                let loaded = try await client.loadProject()
+                project = loaded
+                phase = .ready
+                if let cacheKey { ProjectCache.save(loaded, key: cacheKey) }
+            }
+            if let project {
+                client.registerDevices(Array(project.devices.values))
+                client.startPolling()   // keep light/outlet state in sync with the bus
+            }
         } catch {
-            phase = .failed(error.localizedDescription)
+            // Only fail hard if there's nothing cached to show.
+            if project == nil { phase = .failed(error.localizedDescription) }
+        }
+    }
+
+    /// Force a fresh download of the project structure from the STM (e.g. after
+    /// the installation changed), replacing the cache.
+    func reloadProject() {
+        guard client is STMv3Client else { return }
+        Task {
+            do {
+                let loaded = try await client.loadProject()
+                project = loaded
+                if let cacheKey { ProjectCache.save(loaded, key: cacheKey) }
+                client.registerDevices(Array(loaded.devices.values))
+            } catch {
+                phase = .failed(error.localizedDescription)
+            }
         }
     }
 
@@ -53,7 +88,22 @@ final class HomeStore {
     }
 
     private func apply(_ update: StateUpdate) {
+        // Ignore no-op polls; only react (and persist) when state actually changes.
+        guard let current = project?.devices[update.deviceID]?.state, current != update.state else { return }
         project?.devices[update.deviceID]?.state = update.state
+        scheduleCacheSave()
+    }
+
+    /// Persist the project (incl. last-known states) shortly after the last
+    /// change, coalescing bursts into a single write.
+    private func scheduleCacheSave() {
+        guard let cacheKey else { return }
+        cacheSaveTask?.cancel()
+        cacheSaveTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled, let project = self?.project else { return }
+            ProjectCache.save(project, key: cacheKey)
+        }
     }
 
     // MARK: - Reads

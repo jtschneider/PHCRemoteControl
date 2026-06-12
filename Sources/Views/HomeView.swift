@@ -33,6 +33,16 @@ struct HomeView: View {
         }
     }
 
+    /// Force a fresh project download from the STM (the structure is otherwise
+    /// served from the local cache for instant startup).
+    private var reloadButton: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button("Reload from STM", systemImage: "arrow.clockwise") {
+                store.reloadProject()
+            }
+        }
+    }
+
     // MARK: iPhone — navigation stack
 
     @ViewBuilder
@@ -53,7 +63,7 @@ struct HomeView: View {
                     FloorView(floor: room)
                 }
             }
-            .toolbar { disconnectButton }
+            .toolbar { disconnectButton; reloadButton }
         }
     }
 
@@ -70,7 +80,7 @@ struct HomeView: View {
                 }
             }
             .navigationTitle(project.name)
-            .toolbar { disconnectButton }
+            .toolbar { disconnectButton; reloadButton }
             // Pre-selecting a room only makes sense on iPad, where the detail
             // pane is always visible alongside the sidebar.
             .onAppear { selectedRoom = selectedRoom ?? project.rooms.first?.id }

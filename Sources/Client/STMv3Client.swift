@@ -71,11 +71,7 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
 
         let zipData = chunks.reduce(Data(), +)
         let ppfxData = try extractPPFX(from: zipData)
-        let project = try PHCProjectParser.parse(ppfxData: ppfxData)
-
-        // Register devices so the poll loop can emit state updates.
-        registerDevices(Array(project.devices.values))
-        return project
+        return try PHCProjectParser.parse(ppfxData: ppfxData)
     }
 
     func setPower(_ ref: ChannelRef, on: Bool) async throws {

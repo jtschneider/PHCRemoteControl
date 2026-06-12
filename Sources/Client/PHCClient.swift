@@ -22,6 +22,10 @@ protocol PHCClient: AnyObject, Sendable {
     /// Drive a shutter up / stop / down.
     func moveShutter(_ ref: ChannelRef, _ command: ShutterCommand) async throws
 
+    /// Tell the client which devices to poll (e.g. after loading a cached
+    /// project, where `loadProject` was skipped). No-op for clients that don't poll.
+    func registerDevices(_ devices: [Device])
+
     /// Begin periodically polling output state (lights/outlets) from the control
     /// unit. No-op for clients that already push their own state.
     func startPolling()

@@ -45,6 +45,7 @@ final class MockPHCClient: PHCClient, @unchecked Sendable {
     }
 
     // The mock pushes state changes itself, so polling is a no-op.
+    func registerDevices(_ devices: [Device]) {}
     func startPolling() {}
     func stopPolling() {}
 
