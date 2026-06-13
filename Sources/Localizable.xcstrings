@@ -5,22 +5,15 @@
 
     },
     "Acknowledgments" : {
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Danksagungen" } } }
-    },
-    "App icon artwork" : {
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "App-Icon-Grafik" } } }
-    },
-    "Done" : {
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Fertig" } } }
-    },
-    "Full license texts" : {
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Vollständige Lizenztexte" } } }
-    },
-    "Open-source licenses" : {
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Open-Source-Lizenzen" } } }
-    },
-    "ZIP extraction" : {
-      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "ZIP-Entpackung" } } }
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Danksagungen"
+          }
+        }
+      }
     },
     "Activate" : {
       "extractionState" : "stale",
@@ -29,6 +22,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktivieren"
+          }
+        }
+      }
+    },
+    "App icon artwork" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-Icon-Grafik"
           }
         }
       }
@@ -131,6 +135,17 @@
         }
       }
     },
+    "Done" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig"
+          }
+        }
+      }
+    },
     "Enter the IP address of your PHC control unit (STM). Port 6680 is used automatically." : {
       "localizations" : {
         "de" : {
@@ -159,6 +174,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stockwerke"
+          }
+        }
+      }
+    },
+    "Full license texts" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vollständige Lizenztexte"
           }
         }
       }
@@ -192,6 +218,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hochfahren"
+          }
+        }
+      }
+    },
+    "Open-source licenses" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open-Source-Lizenzen"
           }
         }
       }
@@ -279,6 +316,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stoppen"
+          }
+        }
+      }
+    },
+    "ZIP extraction" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ZIP-Entpackung"
           }
         }
       }
