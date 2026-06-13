@@ -1,5 +1,6 @@
 # Private installation data (downloaded from the STM at runtime; never commit)
 project/
+handbook/
 *.zip
 
 # Proxy captures & scratch analysis files
