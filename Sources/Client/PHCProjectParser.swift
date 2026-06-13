@@ -167,6 +167,19 @@ private final class Parser: NSObject, XMLParserDelegate {
             roomMap[room]?.sortIndex = sortIdx
         }
 
+        // 2b. EMD_VIR virtual inputs → central/group scene buttons (e.g. the
+        //     "5.Zentral" commands: all lights off, close all EG shutters, …).
+        //     Each is a momentary trigger fired via simInputEvent on its EMD channel.
+        for ch in visuChannels
+        where ch.moduleName == "EMD_VIR" && ch.channelGroup == "Eingang"
+        {
+            guard let (sortIdx, room, type, label) = parseChannelParts(ch.text) else { continue }
+            let ref = ChannelRef(moduleClass: .emd, dip: ch.moduleAdr, channel: ch.channelAdr)
+            let device = Device(name: "\(type) \(label)", kind: .scene, ref: ref)
+            roomMap[room, default: (sortIdx, [])].devices.append(device)
+            roomMap[room]?.sortIndex = sortIdx
+        }
+
         // 3. Assemble rooms sorted by sort index then name
         let sortedRooms = roomMap
             .sorted { lhs, rhs in
@@ -203,26 +216,23 @@ private final class Parser: NSObject, XMLParserDelegate {
 
     // MARK: - Helpers
 
-    /// Parses `"N.ROOM : TYPE > LABEL"` → (sortIndex, room, kind, label).
-    private func parseChannelName(_ text: String) -> (Int, String, DeviceKind, String)? {
-        // Split on " : " then " > "
+    /// Splits `"N.ROOM : TYPE > LABEL"` into its parts.
+    /// e.g. `"2.EG : Licht > DL Flur"` → (2, "EG", "Licht", "DL Flur").
+    private func parseChannelParts(_ text: String) -> (sortIdx: Int, room: String, type: String, label: String)? {
         let colonSplit = text.components(separatedBy: " : ")
         guard colonSplit.count == 2 else { return nil }
-        let roomPart = colonSplit[0]   // "2.EG"
-        let rest = colonSplit[1]       // "Licht > DL Flur"
-
-        let arrowSplit = rest.components(separatedBy: " > ")
+        let arrowSplit = colonSplit[1].components(separatedBy: " > ")
         guard arrowSplit.count == 2 else { return nil }
-        let typeStr = arrowSplit[0]    // "Licht"
-        let label = arrowSplit[1]      // "DL Flur"
-
-        // Extract sort index and room name from "N.ROOM"
-        let dotSplit = roomPart.components(separatedBy: ".")
+        let dotSplit = colonSplit[0].components(separatedBy: ".")
         let sortIdx = Int(dotSplit.first ?? "") ?? 99
         let room = dotSplit.dropFirst().joined(separator: ".")
+        return (sortIdx, room, arrowSplit[0], arrowSplit[1])
+    }
 
-        let kind = deviceKind(from: typeStr)
-        return (sortIdx, room, kind, label)
+    /// Parses `"N.ROOM : TYPE > LABEL"` → (sortIndex, room, kind, label).
+    private func parseChannelName(_ text: String) -> (Int, String, DeviceKind, String)? {
+        guard let p = parseChannelParts(text) else { return nil }
+        return (p.sortIdx, p.room, deviceKind(from: p.type), p.label)
     }
 
     /// Returns the key used to pair heben/senken: strips direction suffix.
@@ -275,6 +285,7 @@ private final class Parser: NSObject, XMLParserDelegate {
         case "EG":          return "house"
         case "DG":          return "stairs"
         case "Außen":       return "sun.max"
+        case "Zentral":     return "square.grid.2x2"
         default:            return "square.split.bottomrightquarter"
         }
     }

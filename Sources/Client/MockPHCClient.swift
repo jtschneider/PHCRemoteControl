@@ -44,6 +44,11 @@ final class MockPHCClient: PHCClient, @unchecked Sendable {
         }
     }
 
+    func activateScene(_ ref: ChannelRef) async throws {
+        // No central-command automation in the mock; just acknowledge.
+        try await Task.sleep(for: .milliseconds(120))
+    }
+
     // The mock pushes state changes itself, so polling is a no-op.
     func registerDevices(_ devices: [Device]) {}
     func startPolling() {}

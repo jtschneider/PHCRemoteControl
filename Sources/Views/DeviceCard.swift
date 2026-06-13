@@ -49,7 +49,7 @@ struct DeviceCard: View {
             ShutterControl(device: device)
 
         case .scene:
-            Button("Activate") { store.togglePower(device) }
+            Button("Activate") { store.activateScene(device) }
                 .buttonStyle(.borderedProminent)
                 .frame(maxWidth: .infinity)
         }

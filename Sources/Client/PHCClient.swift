@@ -22,6 +22,10 @@ protocol PHCClient: AnyObject, Sendable {
     /// Drive a shutter up / stop / down.
     func moveShutter(_ ref: ChannelRef, _ command: ShutterCommand) async throws
 
+    /// Fire a momentary virtual/central input (e.g. "all lights off") by
+    /// simulating a button tap on its EMD channel.
+    func activateScene(_ ref: ChannelRef) async throws
+
     /// Tell the client which devices to poll (e.g. after loading a cached
     /// project, where `loadProject` was skipped). No-op for clients that don't poll.
     func registerDevices(_ devices: [Device])

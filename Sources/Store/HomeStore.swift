@@ -123,6 +123,15 @@ final class HomeStore {
         Task { try? await client.setPower(ref, on: newValue) }
     }
 
+    /// Fire a central/virtual command (scene). Momentary — no persistent state.
+    func activateScene(_ device: Device) {
+        guard let ref = device.ref else { return }
+        Task {
+            do { try await client.activateScene(ref) }
+            catch { phase = .failed("Scene \(device.name): \(error.localizedDescription)") }
+        }
+    }
+
     func setBrightness(_ device: Device, _ value: Int) {
         guard let ref = device.ref else { return }
         project?.devices[device.id]?.state.brightness = value

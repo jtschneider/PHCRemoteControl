@@ -117,6 +117,12 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
         try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .doublePress)
     }
 
+    /// Fire a virtual/central input (EMD_VIR) as a momentary button tap.
+    /// Uses the same short-tap sequence as a shutter move.
+    func activateScene(_ ref: ChannelRef) async throws {
+        try await tapMove(ref)
+    }
+
     // MARK: - State polling
 
     /// Register devices so the poll loop can read their module state. Only AMD
