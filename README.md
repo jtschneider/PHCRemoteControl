@@ -89,3 +89,10 @@ first screen and enter the STM's LAN IP.
 
 Your installation export (`project/`, `*.zip`) and any proxy captures are
 **gitignored** and must not be committed — they describe your home's layout.
+
+## Licenses
+
+The app links against **ZIPFoundation** (MIT) and its icon incorporates glyphs
+from **Mono Icons** (MIT) and **Material Design Icons / Pictogrammers**
+(Apache 2.0). Full texts and attributions are in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
