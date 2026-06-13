@@ -3,6 +3,12 @@
 A modern, iPad-friendly iOS app to control a **PEHA / Honeywell PHC**
 (Peha Home Control) electrical installation over the local network.
 
+<p align="center">
+  <img src="screenshots/overview.png" width="260" alt="Home overview — project name as title, rooms list" />
+  &nbsp;&nbsp;
+  <img src="screenshots/devices.png" width="260" alt="Room controls — collapsible Lights and Shutters" />
+</p>
+
 It is a from-scratch replacement for the aging official
 [*PHC Home Control*](https://apps.apple.com/de/app/phc-home-control/id1141475941)
 app, which talks to a networked **STM v3** control unit but was never laid out
