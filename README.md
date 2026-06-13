@@ -90,9 +90,16 @@ first screen and enter the STM's LAN IP.
 Your installation export (`project/`, `*.zip`) and any proxy captures are
 **gitignored** and must not be committed — they describe your home's layout.
 
-## Licenses
+## License
 
-The app links against **ZIPFoundation** (MIT) and its icon incorporates glyphs
-from **Mono Icons** (MIT) and **Material Design Icons / Pictogrammers**
-(Apache 2.0). Full texts and attributions are in
+PHC Remote is licensed under the **GNU Affero General Public License v3.0**
+(AGPL-3.0) — see [LICENSE](LICENSE). In short: it's open source, and derivatives
+— including modified versions made available to users over a network — must
+remain open under the same license. This repository is the corresponding source,
+which also satisfies the license's source-availability requirement for any
+built or sideloaded copy.
+
+Bundled third-party components keep their own permissive licenses —
+**ZIPFoundation** (MIT), **Mono Icons** (MIT), and **Material Design Icons /
+Pictogrammers** (Apache 2.0); full texts and attributions are in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

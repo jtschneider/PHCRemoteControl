@@ -1,8 +1,9 @@
 # Third-Party Notices
 
-PHC Remote ("the app") links against, or incorporates artwork from, the
-third-party works listed below. Their licenses and required attributions are
-reproduced in full.
+PHC Remote itself is licensed under the GNU Affero General Public License v3.0
+(AGPL-3.0); see the `LICENSE` file. The third-party works listed below — which
+the app links against or incorporates artwork from — retain their own licenses,
+reproduced in full with their required attributions.
 
 ---
 
