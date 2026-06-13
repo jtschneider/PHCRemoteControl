@@ -150,7 +150,9 @@ Module bus address:
 
 ## Remaining / possible next steps
 
-1. Dimmer brightness read-back (poll gives on/off only; this installation has no dimmers).
+1. **Dimmers are unsupported** — the slider is Demo-Mode only; the real `setBrightness`
+   is an on/off stub and the parser never creates `.dimmer` devices. No dimmer hardware
+   to test against. Details in [docs/DIMMERS.md](docs/DIMMERS.md).
 2. Background-refresh the project structure (currently manual via "Reload from STM").
 3. Scenes / favourites; off-LAN access.
 4. Stop polling explicitly on backgrounding (today the client's `deinit` cancels it).

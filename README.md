@@ -89,7 +89,8 @@ first screen and enter the STM's LAN IP.
    lights/outlets, shutters, and state polling.
 4. ✅ Project persisted on disk for instant startup.
 5. ✅ German localization (menu labels).
-6. ⏳ Scenes, favourites, dimmer read-back, off-LAN access.
+6. ⏳ Scenes, favourites, off-LAN access. (Dimmers are **not** supported — see
+   [docs/DIMMERS.md](docs/DIMMERS.md); the slider is Demo-Mode only.)
 
 ## Privacy
 
