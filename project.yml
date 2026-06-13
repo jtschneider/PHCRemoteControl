@@ -16,6 +16,8 @@ targets:
     platform: iOS
     sources:
       - Sources
+      - path: THIRD_PARTY_NOTICES.md
+        buildPhase: resources
     dependencies:
       - package: ZIPFoundation
     settings:

@@ -8,6 +8,7 @@ struct ConnectionView: View {
 
     @State private var editing: String = ""
     @FocusState private var focused: Bool
+    @State private var showAcknowledgments = false
 
     var body: some View {
         NavigationStack {
@@ -61,11 +62,21 @@ struct ConnectionView: View {
                     .buttonStyle(.bordered)
                 }
                 .listRowBackground(Color.clear)
+
+                Section {
+                    Button("Acknowledgments") { showAcknowledgments = true }
+                        .font(.footnote)
+                        .frame(maxWidth: .infinity)
+                }
+                .listRowBackground(Color.clear)
             }
             .navigationTitle("PHC Remote")
             .onAppear {
                 editing = host
                 focused = host.isEmpty
+            }
+            .sheet(isPresented: $showAcknowledgments) {
+                AcknowledgmentsView()
             }
         }
     }

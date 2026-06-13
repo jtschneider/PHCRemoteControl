@@ -4,6 +4,24 @@
     "%@%%" : {
 
     },
+    "Acknowledgments" : {
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Danksagungen" } } }
+    },
+    "App icon artwork" : {
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "App-Icon-Grafik" } } }
+    },
+    "Done" : {
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Fertig" } } }
+    },
+    "Full license texts" : {
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Vollständige Lizenztexte" } } }
+    },
+    "Open-source licenses" : {
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Open-Source-Lizenzen" } } }
+    },
+    "ZIP extraction" : {
+      "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "ZIP-Entpackung" } } }
+    },
     "Activate" : {
       "extractionState" : "stale",
       "localizations" : {
