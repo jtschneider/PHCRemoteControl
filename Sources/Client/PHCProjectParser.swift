@@ -49,6 +49,7 @@ private final class Parser: NSObject, XMLParserDelegate {
     }
 
     var visuChannels: [RawChannel] = []
+    var projectName = "PHC"
     var error: Error?
 
     // --- parser state ---
@@ -71,6 +72,8 @@ private final class Parser: NSObject, XMLParserDelegate {
                 qualifiedName _: String?,
                 attributes attrs: [String: String]) {
         switch element {
+        case "PROJECT":
+            if let name = attrs["name"], !name.isEmpty { projectName = name }
         case "MODS":
             currentModuleGroup = attrs["grp"] ?? ""
         case "MOD":
@@ -211,7 +214,7 @@ private final class Parser: NSObject, XMLParserDelegate {
             for d in roomDevices { devices[d.id] = d }
         }
 
-        return PHCProject(name: "PHC", rooms: rooms, devices: devices)
+        return PHCProject(name: projectName, rooms: rooms, devices: devices)
     }
 
     // MARK: - Helpers

@@ -167,17 +167,6 @@
         }
       }
     },
-    "Floors" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stockwerke"
-          }
-        }
-      }
-    },
     "Full license texts" : {
       "extractionState" : "stale",
       "localizations" : {

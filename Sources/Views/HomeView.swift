@@ -49,7 +49,7 @@ struct HomeView: View {
     private var stackSidebar: some View {
         phaseContent { project in
             List {
-                Section("Floors") {
+                Section {
                     ForEach(project.rooms) { room in
                         NavigationLink(value: room.id) {
                             Label(room.name, systemImage: room.symbol)
@@ -73,7 +73,7 @@ struct HomeView: View {
     private var splitSidebar: some View {
         phaseContent { project in
             List(selection: $selectedRoom) {
-                Section("Floors") {
+                Section {
                     ForEach(project.rooms) { room in
                         Label(room.name, systemImage: room.symbol).tag(room.id)
                     }
