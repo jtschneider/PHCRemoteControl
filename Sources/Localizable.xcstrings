@@ -1,124 +1,268 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@%%" : {
+
+    },
     "Activate" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktivieren" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivieren"
+          }
+        }
       }
     },
     "Brightness" : {
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Helligkeit" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helligkeit"
+          }
+        }
       }
     },
     "Can't reach the PHC" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "PHC nicht erreichbar" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PHC nicht erreichbar"
+          }
+        }
       }
     },
     "Close shutter" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Herunterfahren" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herunterfahren"
+          }
+        }
       }
     },
     "Closing…" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Herunterfahren…" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herunterfahren…"
+          }
+        }
       }
     },
     "Collapse All" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle einklappen" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle einklappen"
+          }
+        }
       }
     },
     "Connect to STM" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mit STM verbinden" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit STM verbinden"
+          }
+        }
       }
     },
     "Connecting…" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verbinden…" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinden…"
+          }
+        }
       }
     },
     "Demo Mode (no hardware)" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Demo-Modus (ohne Hardware)" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demo-Modus (ohne Hardware)"
+          }
+        }
       }
     },
     "Disconnect" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Trennen" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trennen"
+          }
+        }
       }
     },
     "Enter the IP address of your PHC control unit (STM). Port 6680 is used automatically." : {
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gib die IP-Adresse deiner PHC-Steuereinheit (STM) ein. Port 6680 wird automatisch verwendet." } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib die IP-Adresse deiner PHC-Steuereinheit (STM) ein. Port 6680 wird automatisch verwendet."
+          }
+        }
       }
     },
     "Expand All" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle ausklappen" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle ausklappen"
+          }
+        }
       }
     },
     "Floors" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stockwerke" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stockwerke"
+          }
+        }
       }
     },
     "Lights" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Deckenlichter" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckenlichter"
+          }
+        }
       }
     },
     "On" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ein" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein"
+          }
+        }
       }
     },
     "Open shutter" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hochfahren" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hochfahren"
+          }
+        }
       }
     },
     "Opening…" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hochfahren…" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hochfahren…"
+          }
+        }
       }
     },
     "Outlets" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Steckdosen" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steckdosen"
+          }
+        }
       }
     },
     "Reload from STM" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Von STM neu laden" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von STM neu laden"
+          }
+        }
       }
     },
     "Scenes" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Szenen" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szenen"
+          }
+        }
       }
     },
     "Select a floor" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stockwerk auswählen" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stockwerk auswählen"
+          }
+        }
       }
     },
     "Shutters" : {
+      "extractionState" : "stale",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rollläden" } }
-      }
-    },
-    "Stop shutter" : {
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stoppen" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rollläden"
+          }
+        }
       }
     },
     "STM IP Address" : {
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "STM-IP-Adresse" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "STM-IP-Adresse"
+          }
+        }
+      }
+    },
+    "Stop shutter" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppen"
+          }
+        }
       }
     }
   },
