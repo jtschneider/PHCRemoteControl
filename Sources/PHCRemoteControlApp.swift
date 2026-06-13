@@ -15,7 +15,7 @@ struct PHCRemoteControlApp: App {
                 ConnectionView { host in
                     if let host {
                         self.store = HomeStore(
-                            client: STMv3Client(endpoint: .init(host: host)),
+                            client: STMv3Client(endpoint: .init(address: host)),
                             cacheKey: host
                         )
                     } else {

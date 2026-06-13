@@ -290,6 +290,24 @@ extension ChannelRef {
 
 }
 
+// MARK: - Endpoint parsing
+
+extension STMv3Client.Endpoint {
+    /// Builds an endpoint from a user-entered address.
+    /// `192.168.x.x` → default port 6680; `192.168.x.x:PORT` → the given port.
+    /// (IPv4 LAN only — IPv6 bracket syntax is not handled.)
+    init(address: String) {
+        let parts = address.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+        let host = parts.first.map { $0.trimmingCharacters(in: .whitespaces) } ?? ""
+        if parts.count == 2,
+           let port = Int(parts[1].trimmingCharacters(in: .whitespaces)), (1...65535).contains(port) {
+            self.init(host: host, port: port)
+        } else {
+            self.init(host: host, port: 6680)
+        }
+    }
+}
+
 // MARK: - NSLock convenience
 
 extension NSLock {

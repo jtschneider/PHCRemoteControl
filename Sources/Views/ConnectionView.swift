@@ -29,7 +29,7 @@ struct ConnectionView: View {
                     HStack {
                         Image(systemName: "network")
                             .foregroundStyle(.secondary)
-                        TextField("192.168.x.x", text: $editing)
+                        TextField("192.168.x.x[:port]", text: $editing)
                             .keyboardType(.numbersAndPunctuation)
                             .autocorrectionDisabled()
                             .focused($focused)
@@ -37,7 +37,7 @@ struct ConnectionView: View {
                 } header: {
                     Text("STM IP Address")
                 } footer: {
-                    Text("Enter the IP address of your PHC control unit (STM). Port 6680 is used automatically.")
+                    Text("Enter the IP address of your PHC control unit (STM). Append :port only if it isn't the default 6680.")
                 }
 
                 Section {

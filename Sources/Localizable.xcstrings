@@ -146,12 +146,12 @@
         }
       }
     },
-    "Enter the IP address of your PHC control unit (STM). Port 6680 is used automatically." : {
+    "Enter the IP address of your PHC control unit (STM). Append :port only if it isn't the default 6680." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gib die IP-Adresse deiner PHC-Steuereinheit (STM) ein. Port 6680 wird automatisch verwendet."
+            "value" : "Gib die IP-Adresse deiner PHC-Steuereinheit (STM) ein. Hänge :Port nur an, wenn nicht der Standardport 6680 verwendet wird."
           }
         }
       }
