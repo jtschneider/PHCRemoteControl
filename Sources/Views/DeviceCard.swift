@@ -27,8 +27,20 @@ struct DeviceCard: View {
                 }
             }
             Spacer()
+            if device.favouriteKey != nil {
+                Button {
+                    store.toggleFavourite(device)
+                } label: {
+                    Image(systemName: isFavourite ? "star.fill" : "star")
+                        .foregroundStyle(isFavourite ? Color.yellow : .secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(isFavourite ? "Remove from favourites" : "Add to favourites")
+            }
         }
     }
+
+    private var isFavourite: Bool { store.isFavourite(device) }
 
     @ViewBuilder
     private var control: some View {

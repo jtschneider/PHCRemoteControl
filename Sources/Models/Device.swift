@@ -54,6 +54,12 @@ struct Device: Identifiable, Codable, Sendable {
         self.state = state
     }
 
+    /// Stable identity for favouriting, derived from the hardware address (not
+    /// `id`, which the parser regenerates on every reload). `nil` if no ref.
+    var favouriteKey: String? {
+        ref.map { "\($0.moduleClass.rawValue)-\($0.dip)-\($0.channel)" }
+    }
+
     var systemImage: String {
         switch kind {
         case .light:   return state.isOn ? "lightbulb.fill" : "lightbulb"

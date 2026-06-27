@@ -49,6 +49,7 @@ struct HomeView: View {
     private var stackSidebar: some View {
         phaseContent { project in
             List {
+                favouritesSection
                 Section {
                     ForEach(project.rooms) { room in
                         NavigationLink(value: room.id) {
@@ -73,6 +74,7 @@ struct HomeView: View {
     private var splitSidebar: some View {
         phaseContent { project in
             List(selection: $selectedRoom) {
+                favouritesSection
                 Section {
                     ForEach(project.rooms) { room in
                         Label(room.name, systemImage: room.symbol).tag(room.id)
@@ -84,6 +86,21 @@ struct HomeView: View {
             // Pre-selecting a room only makes sense on iPad, where the detail
             // pane is always visible alongside the sidebar.
             .onAppear { selectedRoom = selectedRoom ?? project.rooms.first?.id }
+        }
+    }
+
+    /// Pinned at the top of the overview; hidden when nothing is favourited.
+    @ViewBuilder
+    private var favouritesSection: some View {
+        if !store.favourites.isEmpty {
+            Section("Favourites") {
+                ForEach(store.favourites) { device in
+                    DeviceCard(device: device)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                }
+            }
         }
     }
 

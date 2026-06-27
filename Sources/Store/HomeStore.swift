@@ -24,9 +24,14 @@ final class HomeStore {
     /// Pending "command sent" indicator clears, keyed by device id.
     private var shutterClearTasks: [UUID: Task<Void, Never>] = [:]
 
+    /// Favourited devices, by stable `favouriteKey` (hardware address), per host.
+    private(set) var favouriteKeys: Set<String> = []
+    private var favouritesDefaultsKey: String { "favourites.\(cacheKey ?? "demo")" }
+
     init(client: PHCClient = MockPHCClient(), cacheKey: String? = nil) {
         self.client = client
         self.cacheKey = cacheKey
+        favouriteKeys = Set(UserDefaults.standard.stringArray(forKey: "favourites.\(cacheKey ?? "demo")") ?? [])
     }
 
     func start() {
@@ -113,6 +118,25 @@ final class HomeStore {
     }
 
     func device(_ id: UUID) -> Device? { project?.devices[id] }
+
+    /// Favourited devices, in project order (floor → category → name).
+    var favourites: [Device] {
+        guard let project else { return [] }
+        return project.rooms
+            .flatMap { $0.deviceIDs.compactMap { project.devices[$0] } }
+            .filter { isFavourite($0) }
+    }
+
+    func isFavourite(_ device: Device) -> Bool {
+        guard let key = device.favouriteKey else { return false }
+        return favouriteKeys.contains(key)
+    }
+
+    func toggleFavourite(_ device: Device) {
+        guard let key = device.favouriteKey else { return }
+        if favouriteKeys.contains(key) { favouriteKeys.remove(key) } else { favouriteKeys.insert(key) }
+        UserDefaults.standard.set(Array(favouriteKeys), forKey: favouritesDefaultsKey)
+    }
 
     // MARK: - Intents (optimistic, then fire the command)
 
