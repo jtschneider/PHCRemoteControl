@@ -15,36 +15,6 @@
         }
       }
     },
-    "Add to favourites" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zu Favoriten hinzufügen"
-          }
-        }
-      }
-    },
-    "Favourites" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favoriten"
-          }
-        }
-      }
-    },
-    "Remove from favourites" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aus Favoriten entfernen"
-          }
-        }
-      }
-    },
     "Activate" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -52,6 +22,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktivieren"
+          }
+        }
+      }
+    },
+    "Add to favourites" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu Favoriten hinzufügen"
           }
         }
       }
@@ -197,6 +178,17 @@
         }
       }
     },
+    "Favourites" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoriten"
+          }
+        }
+      }
+    },
     "Full license texts" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -281,6 +273,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Von STM neu laden"
+          }
+        }
+      }
+    },
+    "Remove from favourites" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus Favoriten entfernen"
           }
         }
       }
