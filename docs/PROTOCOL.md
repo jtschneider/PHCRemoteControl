@@ -86,6 +86,9 @@ takes; treat them as reference. Discovery/gateway chaining
 framework, but the app simply takes the STM's IP from the user.
 
 ### Command/telegram model (`interfaces/ICommand`, `functions.xml`)
+> How to decode any module's command codes from the Systemsoftware data files
+> (and what's decoded so far) is in [COMMAND-CODES.md](COMMAND-CODES.md).
+
 A command has an `internalCommandName`, an integer `command` code, a
 `commandGroupname`, optional `extendedBytes`, and flags
 (`STOP_ANALOG_PROCESSING`, `INVISIBLE`, `GLOBAL`, `INI`). `functions.xml` maps
