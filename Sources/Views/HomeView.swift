@@ -190,30 +190,35 @@ struct FloorView: View {
     }
 }
 
-/// Devices in a room grouped into a display category (lights, shutters, …).
+/// Devices in a room grouped into a display category.
 struct DeviceGroup: Identifiable {
-    /// Stable English identity (also the localization key): "Lights", "Shutters", …
+    /// The section heading. For real devices this is the verbatim project category
+    /// (e.g. "Licht", "Rollläden"); for mock devices it falls back to a kind name.
     let id: String
     let symbol: String
     let devices: [Device]
 
-    /// Localized category heading, looked up from `id` via the String Catalog.
+    /// Heading text. Project categories render verbatim (they aren't catalog keys);
+    /// the mock's fallback names ("Lights", …) get localized via the String Catalog.
     var title: LocalizedStringKey { LocalizedStringKey(id) }
 
-    /// Buckets pre-sorted devices into ordered category groups, preserving the
-    /// incoming order (lights → shutters → outlets …, already sorted by name).
+    /// Buckets the pre-sorted devices by their project category, preserving order.
     static func grouped(_ devices: [Device]) -> [DeviceGroup] {
         var order: [String] = []
         var buckets: [String: [Device]] = [:]
         for device in devices {
-            let title = categoryTitle(for: device.kind)
-            if buckets[title] == nil { order.append(title) }
-            buckets[title, default: []].append(device)
+            let category = device.category.isEmpty ? fallbackCategory(device.kind) : device.category
+            if buckets[category] == nil { order.append(category) }
+            buckets[category, default: []].append(device)
         }
-        return order.map { DeviceGroup(id: $0, symbol: symbol(for: $0), devices: buckets[$0]!) }
+        return order.map { cat in
+            let devs = buckets[cat]!
+            return DeviceGroup(id: cat, symbol: symbol(for: cat, kind: devs[0].kind), devices: devs)
+        }
     }
 
-    private static func categoryTitle(for kind: DeviceKind) -> String {
+    /// Used only for mock/sample devices, which carry no project category.
+    private static func fallbackCategory(_ kind: DeviceKind) -> String {
         switch kind {
         case .light, .dimmer: return "Lights"
         case .shutter:        return "Shutters"
@@ -222,12 +227,18 @@ struct DeviceGroup: Identifiable {
         }
     }
 
-    private static func symbol(for title: String) -> String {
-        switch title {
-        case "Lights":   return "lightbulb.fill"
-        case "Shutters": return "blinds.horizontal.closed"
-        case "Outlets":  return "powerplug.fill"
-        default:         return "play.circle"
+    /// Icon for a section: keyword-match the (German) category, else fall back to kind.
+    private static func symbol(for category: String, kind: DeviceKind) -> String {
+        let c = category.lowercased()
+        if c.contains("licht") || c.contains("light") || c.contains("lampe") { return "lightbulb.fill" }
+        if c.contains("roll")  || c.contains("shutter") || c.contains("jalousie") { return "blinds.horizontal.closed" }
+        if c.contains("steckdose") || c.contains("outlet") || c.contains("pumpe") { return "powerplug.fill" }
+        if c.contains("lüftung") || c.contains("fenster") { return "wind" }
+        switch kind {
+        case .light, .dimmer: return "lightbulb.fill"
+        case .shutter:        return "blinds.horizontal.closed"
+        case .outlet:         return "powerplug.fill"
+        case .scene:          return "play.circle"
         }
     }
 }

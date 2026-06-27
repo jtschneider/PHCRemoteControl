@@ -38,13 +38,19 @@ struct Device: Identifiable, Codable, Sendable {
     /// `ref` holds the lower (senken) channel; both use simInputEvent.
     var shutterUpRef: ChannelRef?
 
+    /// The category this device groups under in the UI — the verbatim `TYPE`
+    /// segment of its project channel name (e.g. "Licht", "Rollläden",
+    /// "Steckdose"). Empty for mock/sample devices (the UI falls back to the kind).
+    var category: String
+
     init(id: UUID = UUID(), name: String, kind: DeviceKind, ref: ChannelRef? = nil,
-         shutterUpRef: ChannelRef? = nil, state: DeviceState = .init()) {
+         shutterUpRef: ChannelRef? = nil, category: String = "", state: DeviceState = .init()) {
         self.id = id
         self.name = name
         self.kind = kind
         self.ref = ref
         self.shutterUpRef = shutterUpRef
+        self.category = category
         self.state = state
     }
 
