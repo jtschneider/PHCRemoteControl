@@ -244,13 +244,13 @@ struct DeviceGroup: Identifiable {
         }
     }
 
-    /// Icon for a section: keyword-match the (German) category, else fall back to kind.
+    /// Icon for a section: keyword-match the (German/English) category name, then
+    /// fall back to the device kind. Keyword lists are shared with the parser.
     private static func symbol(for category: String, kind: DeviceKind) -> String {
-        let c = category.lowercased()
-        if c.contains("licht") || c.contains("light") || c.contains("lampe") { return "lightbulb.fill" }
-        if c.contains("roll")  || c.contains("shutter") || c.contains("jalousie") { return "blinds.horizontal.closed" }
-        if c.contains("steckdose") || c.contains("outlet") || c.contains("pumpe") { return "powerplug.fill" }
-        if c.contains("lüftung") || c.contains("fenster") { return "wind" }
+        if PHCKeywords.matches(PHCKeywords.shutter, category) { return "blinds.horizontal.closed" }
+        if PHCKeywords.matches(PHCKeywords.outlet, category)  { return "powerplug.fill" }
+        if PHCKeywords.matches(PHCKeywords.vent, category)    { return "wind" }
+        if PHCKeywords.matches(PHCKeywords.light, category)   { return "lightbulb.fill" }
         switch kind {
         case .light, .dimmer: return "lightbulb.fill"
         case .shutter:        return "blinds.horizontal.closed"

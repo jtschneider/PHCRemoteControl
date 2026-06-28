@@ -270,14 +270,13 @@ private final class Parser: NSObject, XMLParserDelegate {
         return parseChannelName(key)
     }
 
+    /// Maps a channel TYPE (Rollo, Rollladen, Jalousie, Licht, Steckdose, …) to a
+    /// control kind via German/English keywords (see `PHCKeywords`). Defaults to
+    /// light for anything unrecognised.
     private func deviceKind(from typeStr: String) -> DeviceKind {
-        switch typeStr {
-        case "Licht":      return .light
-        case "Steckdose":  return .outlet
-        case "Pumpe":      return .outlet
-        case "Rollo":      return .shutter
-        default:           return .light
-        }
+        if PHCKeywords.matches(PHCKeywords.shutter, typeStr) { return .shutter }
+        if PHCKeywords.matches(PHCKeywords.outlet, typeStr)  { return .outlet }
+        return .light
     }
 
     /// Display order of device categories within a floor: lights, then shutters,
