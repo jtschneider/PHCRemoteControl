@@ -70,6 +70,7 @@
       }
     },
     "Change IP address" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
