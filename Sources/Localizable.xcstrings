@@ -69,6 +69,16 @@
         }
       }
     },
+    "Change IP address" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP-Adresse ändern"
+          }
+        }
+      }
+    },
     "Close shutter" : {
       "extractionState" : "stale",
       "localizations" : {

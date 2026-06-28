@@ -122,7 +122,14 @@ struct HomeView: View {
         case .connecting:
             ProgressView("Connecting…")
         case .failed(let message):
-            ContentUnavailableView("Can't reach the PHC", systemImage: "wifi.exclamationmark", description: Text(message))
+            ContentUnavailableView {
+                Label("Can't reach the PHC", systemImage: "wifi.exclamationmark")
+            } description: {
+                Text(message)
+            } actions: {
+                Button("Change IP address") { onDisconnect() }
+                    .buttonStyle(.borderedProminent)
+            }
         case .ready:
             if let project = store.project {
                 content(project)
