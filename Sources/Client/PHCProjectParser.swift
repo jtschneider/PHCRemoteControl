@@ -291,15 +291,23 @@ private final class Parser: NSObject, XMLParserDelegate {
         }
     }
 
+    /// Floor/room name → SF Symbol, matched by German/English synonyms. Short codes
+    /// (EG, DG, KG, OG …) match exactly; longer words (Erdgeschoss, Keller …) match
+    /// as a substring, so the icon survives different naming conventions. The
+    /// symbol choices are unchanged from the original hand-picked set.
     private func roomSymbol(for room: String) -> String {
-        switch room {
-        case "KG":          return "arrow.down.to.line"
-        case "Einlieger":   return "house.and.flag"
-        case "EG":          return "house"
-        case "DG":          return "stairs"
-        case "Außen":       return "sun.max"
-        case "Zentral":     return "square.grid.2x2"
-        default:            return "square.split.bottomrightquarter"
+        let groups: [(symbol: String, synonyms: [String])] = [
+            ("arrow.down.to.line", ["kg", "ug", "keller", "untergeschoss", "souterrain", "basement", "cellar"]),
+            ("house.and.flag",     ["einlieger", "einliegerwohnung", "elw", "annex", "granny", "gästewohnung", "apartment"]),
+            ("house",              ["eg", "erdgeschoss", "parterre", "ground", "groundfloor"]),
+            ("stairs",             ["og", "dg", "obergeschoss", "dachgeschoss", "dach", "stock", "etage", "upper", "attic", "loft"]),
+            ("sun.max",            ["außen", "aussen", "garten", "outdoor", "outside", "terrasse", "balkon", "garden"]),
+            ("square.grid.2x2",    ["zentral", "central", "gesamt", "global"]),
+        ]
+        let name = room.lowercased()
+        for group in groups where group.synonyms.contains(where: { name == $0 || ($0.count >= 4 && name.contains($0)) }) {
+            return group.symbol
         }
+        return "square.split.bottomrightquarter"
     }
 }
