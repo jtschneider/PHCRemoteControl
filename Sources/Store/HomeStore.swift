@@ -24,14 +24,15 @@ final class HomeStore {
     /// Pending "command sent" indicator clears, keyed by device id.
     private var shutterClearTasks: [UUID: Task<Void, Never>] = [:]
 
-    /// Favourited devices, by stable `favouriteKey` (hardware address), per host.
-    private(set) var favouriteKeys: Set<String> = []
+    /// Favourited devices, by stable `favouriteKey` (hardware address), per host,
+    /// in the user's chosen order.
+    private(set) var favouriteKeys: [String] = []
     private var favouritesDefaultsKey: String { "favourites.\(cacheKey ?? "demo")" }
 
     init(client: PHCClient = MockPHCClient(), cacheKey: String? = nil) {
         self.client = client
         self.cacheKey = cacheKey
-        favouriteKeys = Set(UserDefaults.standard.stringArray(forKey: "favourites.\(cacheKey ?? "demo")") ?? [])
+        favouriteKeys = UserDefaults.standard.stringArray(forKey: "favourites.\(cacheKey ?? "demo")") ?? []
     }
 
     func start() {
@@ -119,12 +120,14 @@ final class HomeStore {
 
     func device(_ id: UUID) -> Device? { project?.devices[id] }
 
-    /// Favourited devices, in project order (floor → category → name).
+    /// Favourited devices, in the user's chosen order.
     var favourites: [Device] {
         guard let project else { return [] }
-        return project.rooms
-            .flatMap { $0.deviceIDs.compactMap { project.devices[$0] } }
-            .filter { isFavourite($0) }
+        let byKey = Dictionary(
+            project.devices.values.compactMap { d in d.favouriteKey.map { ($0, d) } },
+            uniquingKeysWith: { first, _ in first }
+        )
+        return favouriteKeys.compactMap { byKey[$0] }
     }
 
     func isFavourite(_ device: Device) -> Bool {
@@ -134,8 +137,24 @@ final class HomeStore {
 
     func toggleFavourite(_ device: Device) {
         guard let key = device.favouriteKey else { return }
-        if favouriteKeys.contains(key) { favouriteKeys.remove(key) } else { favouriteKeys.insert(key) }
-        UserDefaults.standard.set(Array(favouriteKeys), forKey: favouritesDefaultsKey)
+        if let idx = favouriteKeys.firstIndex(of: key) { favouriteKeys.remove(at: idx) }
+        else { favouriteKeys.append(key) }
+        persistFavourites()
+    }
+
+    /// Reorder favourites (drag-to-reorder in the pinned section). Offsets index
+    /// into the *displayed* favourites; any keys not resolvable in the current
+    /// project are preserved at the end.
+    func moveFavourite(fromOffsets: IndexSet, toOffset: Int) {
+        var ordered = favourites.compactMap(\.favouriteKey)
+        ordered.move(fromOffsets: fromOffsets, toOffset: toOffset)
+        let resolved = Set(ordered)
+        favouriteKeys = ordered + favouriteKeys.filter { !resolved.contains($0) }
+        persistFavourites()
+    }
+
+    private func persistFavourites() {
+        UserDefaults.standard.set(favouriteKeys, forKey: favouritesDefaultsKey)
     }
 
     // MARK: - Intents (optimistic, then fire the command)
