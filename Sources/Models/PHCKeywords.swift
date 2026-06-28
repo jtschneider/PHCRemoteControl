@@ -10,9 +10,13 @@ import Foundation
 enum PHCKeywords {
     static let shutter = ["roll", "jalousie", "shutter", "blind", "raffstore",
                           "markise", "beschattung", "sonnenschutz", "store"]
-    static let outlet  = ["steckdose", "outlet", "socket", "pumpe", "pump"]
+    static let outlet  = ["steckdose", "dose", "schuko", "stecker", "outlet",
+                          "socket", "receptacle", "plug", "pumpe", "pump",
+                          "zirkulation"]
     static let light   = ["licht", "lampe", "leuchte", "beleuchtung", "strahler",
-                          "spot", "light", "lamp"]
+                          "spot", "fluter", "kronleuchter", "lüster", "luster",
+                          "pendel", "birne", "led", "light", "lamp", "bulb",
+                          "sconce", "chandelier", "downlight"]
     static let vent    = ["lüftung", "luftung", "fenster", "klima", "ventil", "window"]
 
     /// True if `text` contains any of `words` (case-insensitive).
