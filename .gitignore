@@ -10,7 +10,7 @@ details.xml
 decode.py
 
 # macOS / Xcode
-.DS_Store
+**/.DS_Store
 DerivedData/
 *.xcuserstate
 
