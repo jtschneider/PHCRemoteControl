@@ -12,6 +12,9 @@ enum DeviceKind: String, Codable, Sendable {
 /// Direction command for a shutter/blind.
 enum ShutterCommand: String, Codable, Sendable {
     case up, stop, down
+    /// Slat-angle nudge for jalousies (venetian blinds). Momentary — one small
+    /// step per tap, no persistent state.
+    case tiltOpen, tiltClose
 }
 
 /// The live state of a device. Only the fields relevant to its `kind` are used.
@@ -58,6 +61,14 @@ struct Device: Identifiable, Codable, Sendable {
     /// `id`, which the parser regenerates on every reload). `nil` if no ref.
     var favouriteKey: String? {
         ref.map { "\($0.moduleClass.rawValue)-\($0.dip)-\($0.channel)" }
+    }
+
+    /// A venetian blind (tiltable slats) rather than a plain roller shutter, so
+    /// the card offers the optional tilt controls. PHC records no distinct jalousie
+    /// type — both are JRM "Shutter" — so we infer it from the project's own wording
+    /// (the channel's category/name). Computed, so it needs no cache migration.
+    var isJalousie: Bool {
+        kind == .shutter && PHCKeywords.matches(PHCKeywords.jalousie, category + " " + name)
     }
 
     var systemImage: String {

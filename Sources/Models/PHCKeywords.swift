@@ -19,6 +19,12 @@ enum PHCKeywords {
                           "sconce", "chandelier", "downlight"]
     static let vent    = ["lüftung", "luftung", "fenster", "klima", "ventil", "window"]
 
+    /// Venetian blinds (tiltable slats) — a subset of `shutter`. Used to offer the
+    /// optional slat-tilt controls. PHC stores no distinct jalousie type (both are
+    /// JRM "Shutter"), so this is the only signal: the installer's own wording.
+    static let jalousie = ["jalousie", "raffstore", "lamelle", "lamellen",
+                           "venetian", "slat"]
+
     /// True if `text` contains any of `words` (case-insensitive).
     static func matches(_ words: [String], _ text: String) -> Bool {
         let t = text.lowercased()

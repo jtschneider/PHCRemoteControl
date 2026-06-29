@@ -188,14 +188,18 @@ final class HomeStore {
 
         // Optimistic "command sent" indicator. There is no position/movement
         // feedback from PHC shutters, so for up/down we show the indicator
-        // briefly and auto-clear it; stop clears immediately.
-        shutterClearTasks[id]?.cancel()
-        project?.devices[id]?.state.shutterMoving = (command == .stop) ? nil : command
-        if command != .stop {
-            shutterClearTasks[id] = Task { [weak self] in
-                try? await Task.sleep(for: .seconds(4))
-                guard !Task.isCancelled else { return }
-                self?.project?.devices[id]?.state.shutterMoving = nil
+        // briefly and auto-clear it; stop clears immediately. Slat tilt is a
+        // momentary nudge and carries no "moving" state at all.
+        let isTilt = command == .tiltOpen || command == .tiltClose
+        if !isTilt {
+            shutterClearTasks[id]?.cancel()
+            project?.devices[id]?.state.shutterMoving = (command == .stop) ? nil : command
+            if command != .stop {
+                shutterClearTasks[id] = Task { [weak self] in
+                    try? await Task.sleep(for: .seconds(4))
+                    guard !Task.isCancelled else { return }
+                    self?.project?.devices[id]?.state.shutterMoving = nil
+                }
             }
         }
 

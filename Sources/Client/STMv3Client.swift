@@ -106,6 +106,10 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
             // A long press on the senken (down) channel stops motion in either direction.
             try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .press)
             try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .longPress)
+        case .tiltOpen:
+            try await tip(upRef ?? downRef)
+        case .tiltClose:
+            try await tip(downRef)
         }
     }
 
@@ -115,6 +119,22 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
         try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .press)
         try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .release)
         try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .doublePress)
+    }
+
+    /// A brief "tip" on an EMD channel: press → release, *without* the doublePress
+    /// that commits a full travel. On a JRM channel configured as a jalousie this
+    /// should nudge the slat angle one step.
+    ///
+    /// EXPERIMENTAL / UNVERIFIED. The canonical jog is the JRM output Tippbetrieb
+    /// (JRM_AUS com 7 = heben, com 8 = senken, in the decompiled function table),
+    /// but those outputs aren't exposed as addressable visu channels in the ppfx —
+    /// they read `visu="false"` / "Eingangsmerker", and the rocker→output mapping
+    /// lives in the tpfx we don't parse. So we approximate the tip on the rocker
+    /// input we *can* reach. Only roller shutters were available to test; a capture
+    /// from a real jalousie would confirm or replace this exact event sequence.
+    private func tip(_ ref: ChannelRef) async throws {
+        try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .press)
+        try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .release)
     }
 
     /// Fire a virtual/central input (EMD_VIR) as a momentary button tap.

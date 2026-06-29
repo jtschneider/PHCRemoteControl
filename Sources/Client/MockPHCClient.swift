@@ -41,6 +41,9 @@ final class MockPHCClient: PHCClient, @unchecked Sendable {
         case .up, .down:
             mutate(matching: ref) { $0.shutterMoving = command }
             simulateTravel(ref: ref, opening: command == .up)
+        case .tiltOpen, .tiltClose:
+            // Slat nudge — momentary, with no persistent state to simulate.
+            try await Task.sleep(for: .milliseconds(80))
         }
     }
 

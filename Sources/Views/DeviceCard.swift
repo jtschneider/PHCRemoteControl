@@ -117,6 +117,8 @@ private struct ShutterControl: View {
                 shutterButton(.stop, "stop.fill")
                 shutterButton(.down, "chevron.down")
             }
+            // Slat-angle controls, only for jalousies (venetian blinds).
+            if device.isJalousie { tiltRow }
             if let statusText {
                 HStack {
                     ProgressView().controlSize(.mini)
@@ -140,11 +142,42 @@ private struct ShutterControl: View {
         .accessibilityLabel(accessibilityLabel(command))
     }
 
+    /// Fine slat-angle nudges for a jalousie. Momentary (one step per tap); PHC has
+    /// no slat-position feedback and the command is reverse-engineered, so it's
+    /// flagged experimental rather than shown as a precise angle.
+    private var tiltRow: some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 12) {
+                tiltButton(.tiltOpen, "blinds.horizontal.open")
+                tiltButton(.tiltClose, "blinds.horizontal.closed")
+            }
+            HStack {
+                Text("Slat tilt (experimental)")
+                    .font(.caption2).foregroundStyle(.tertiary)
+                Spacer()
+            }
+        }
+    }
+
+    private func tiltButton(_ command: ShutterCommand, _ symbol: String) -> some View {
+        Button {
+            store.moveShutter(device, command)
+        } label: {
+            Image(systemName: symbol)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+        }
+        .buttonStyle(.bordered)
+        .accessibilityLabel(accessibilityLabel(command))
+    }
+
     private func accessibilityLabel(_ command: ShutterCommand) -> LocalizedStringKey {
         switch command {
-        case .up:   return "Open shutter"
-        case .stop: return "Stop shutter"
-        case .down: return "Close shutter"
+        case .up:        return "Open shutter"
+        case .stop:      return "Stop shutter"
+        case .down:      return "Close shutter"
+        case .tiltOpen:  return "Tilt slats open"
+        case .tiltClose: return "Tilt slats closed"
         }
     }
 
@@ -153,7 +186,7 @@ private struct ShutterControl: View {
         switch device.state.shutterMoving {
         case .up: return "Opening…"
         case .down: return "Closing…"
-        case .stop, .none: return nil
+        case .stop, .tiltOpen, .tiltClose, .none: return nil
         }
     }
 }
@@ -168,6 +201,10 @@ private struct ShutterControl: View {
             DeviceCard(device: Device(name: "Terrace Blind", kind: .shutter,
                                       ref: ChannelRef(moduleClass: .jrm, dip: 0, channel: 0),
                                       state: DeviceState(shutterPosition: 80)))
+            DeviceCard(device: Device(name: "Living Room", kind: .shutter,
+                                      ref: ChannelRef(moduleClass: .emd, dip: 2, channel: 4),
+                                      shutterUpRef: ChannelRef(moduleClass: .emd, dip: 2, channel: 5),
+                                      category: "Jalousie"))
         }
         .padding()
     }
