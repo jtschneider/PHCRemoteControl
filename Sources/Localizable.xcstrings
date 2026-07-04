@@ -342,6 +342,16 @@
         }
       }
     },
+    "Slat tilt (experimental)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lamellen (experimentell)"
+          }
+        }
+      }
+    },
     "Stop shutter" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -349,6 +359,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stoppen"
+          }
+        }
+      }
+    },
+    "Tilt slats closed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lamellen schließen"
+          }
+        }
+      }
+    },
+    "Tilt slats open" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lamellen öffnen"
           }
         }
       }
