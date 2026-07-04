@@ -19,3 +19,4 @@ PHCRemoteControl.xcodeproj/
 
 # Xcode build output (xcodebuild default SYMROOT)
 build/
+setup_PHC/
