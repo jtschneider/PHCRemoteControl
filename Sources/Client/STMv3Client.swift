@@ -311,7 +311,10 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
     /// Uses ZIPFoundation which reads the central directory (end of file) and handles
     /// data descriptors, bit-3 flags, and raw DEFLATE correctly.
     private func extractProjectFile(named name: String, from zip: Data, required: Bool) throws -> Data? {
-        guard let archive = Archive(data: zip, accessMode: .read) else {
+        let archive: Archive
+        do {
+            archive = try Archive(data: zip, accessMode: .read)
+        } catch {
             throw PHCClientError.transport(PHCLocalization.string("Could not open project ZIP archive"))
         }
         guard let entry = archive[name] else {

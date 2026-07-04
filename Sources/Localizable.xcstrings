@@ -1,10 +1,8 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%@%%" : {
-
-    },
     "%@ contains more than %d supported actions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -15,6 +13,7 @@
       }
     },
     "%@ contains too many tool input candidates" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -25,6 +24,7 @@
       }
     },
     "%@ exceeds %d MB" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -35,6 +35,7 @@
       }
     },
     "%@ is empty" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -45,6 +46,7 @@
       }
     },
     "%@ nesting exceeds %d levels" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -55,6 +57,7 @@
       }
     },
     "%@ not found in ZIP" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -63,6 +66,9 @@
           }
         }
       }
+    },
+    "%@%%" : {
+
     },
     "Acknowledgments" : {
       "extractionState" : "stale",
@@ -87,6 +93,7 @@
       }
     },
     "Activate %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -97,6 +104,7 @@
       }
     },
     "Activate security action?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -150,6 +158,7 @@
       }
     },
     "Cancel" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -226,6 +235,7 @@
       }
     },
     "Could not encode project XML as UTF-8" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -236,6 +246,7 @@
       }
     },
     "Could not open project ZIP archive" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -246,6 +257,7 @@
       }
     },
     "Could not parse %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -343,6 +355,7 @@
       }
     },
     "Lower shutter" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -353,6 +366,7 @@
       }
     },
     "Non-text XML-RPC response" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -418,6 +432,7 @@
       }
     },
     "Project channel label exceeds %d characters" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -428,6 +443,7 @@
       }
     },
     "Project contains more than %d visible channels" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -438,6 +454,7 @@
       }
     },
     "Project download exceeded %d chunks" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -448,6 +465,7 @@
       }
     },
     "Project ZIP exceeds %d MB" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -458,11 +476,67 @@
       }
     },
     "Raise shutter" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hochfahren"
+          }
+        }
+      }
+    },
+    "readFile chunk %d is outside total %d" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "readFile-Block %d liegt außerhalb der Gesamtzahl %d"
+          }
+        }
+      }
+    },
+    "readFile chunk %d: empty payload" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "readFile-Block %d: leere Nutzdaten"
+          }
+        }
+      }
+    },
+    "readFile chunk %d: missing or invalid base64" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "readFile-Block %d: Base64 fehlt oder ist ungültig"
+          }
+        }
+      }
+    },
+    "readFile reported invalid chunk total %d" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "readFile meldet eine ungültige Blockanzahl %d"
+          }
+        }
+      }
+    },
+    "readFile returned chunk %d, expected %d" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "readFile lieferte Block %d, erwartet war %d"
           }
         }
       }
@@ -489,52 +563,13 @@
         }
       }
     },
-    "readFile chunk %d is outside total %d" : {
+    "Scene %@: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "readFile-Block %d liegt außerhalb der Gesamtzahl %d"
-          }
-        }
-      }
-    },
-    "readFile chunk %d: empty payload" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "readFile-Block %d: leere Nutzdaten"
-          }
-        }
-      }
-    },
-    "readFile chunk %d: missing or invalid base64" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "readFile-Block %d: Base64 fehlt oder ist ungültig"
-          }
-        }
-      }
-    },
-    "readFile reported invalid chunk total %d" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "readFile meldet eine ungültige Blockanzahl %d"
-          }
-        }
-      }
-    },
-    "readFile returned chunk %d, expected %d" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "readFile lieferte Block %d, erwartet war %d"
+            "value" : "Szene %@: %@"
           }
         }
       }
@@ -546,16 +581,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Szenen"
-          }
-        }
-      }
-    },
-    "Scene %@: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Szene %@: %@"
           }
         }
       }
@@ -572,6 +597,7 @@
       }
     },
     "Shutter command failed: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -602,22 +628,23 @@
         }
       }
     },
+    "STM fault: %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "STM-Fehler: %@"
+          }
+        }
+      }
+    },
     "STM IP Address" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "STM-IP-Adresse"
-          }
-        }
-      }
-    },
-    "STM fault: %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "STM-Fehler: %@"
           }
         }
       }
@@ -666,6 +693,7 @@
       }
     },
     "XML-RPC response exceeds %d MB" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
