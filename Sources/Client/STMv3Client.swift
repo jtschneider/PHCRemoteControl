@@ -17,6 +17,13 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
         var port: Int = 6680
     }
 
+    private enum ProjectDownloadLimits {
+        static let maxReadFileChunks = 4096
+        static let maxProjectZIPBytes = 16 * 1024 * 1024
+        static let maxProjectXMLBytes = 8 * 1024 * 1024
+        static let maxXMLRPCResponseBytes = 24 * 1024 * 1024
+    }
+
     // MARK: - PHCClient
 
     let events: AsyncStream<StateUpdate>
@@ -52,26 +59,40 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
 
     func loadProject() async throws -> PHCProject {
         // Download the project ZIP via chunked readFile calls, then parse the ppfx.
-        var chunks: [Data] = []
+        var zipData = Data()
         var chunkIdx = 0
         while true {
+            guard chunkIdx < ProjectDownloadLimits.maxReadFileChunks else {
+                throw PHCClientError.transport(PHCLocalization.string("Project download exceeded %d chunks", ProjectDownloadLimits.maxReadFileChunks))
+            }
+
             let result = try await call(
                 method: "service.stm.readFile",
                 params: [.int(0), .int(chunkIdx), .int(1)]
             )
+            try validateReadFileResult(result, expectedChunk: chunkIdx)
+
             guard let b64 = result.base64,
                   let data = Data(base64Encoded: b64, options: .ignoreUnknownCharacters)
-            else { throw PHCClientError.transport("readFile chunk \(chunkIdx): missing or invalid base64") }
+            else { throw PHCClientError.transport(PHCLocalization.string("readFile chunk %d: missing or invalid base64", chunkIdx)) }
+            guard !data.isEmpty else {
+                throw PHCClientError.transport(PHCLocalization.string("readFile chunk %d: empty payload", chunkIdx))
+            }
+            guard zipData.count + data.count <= ProjectDownloadLimits.maxProjectZIPBytes else {
+                throw PHCClientError.transport(PHCLocalization.string("Project ZIP exceeds %d MB", ProjectDownloadLimits.maxProjectZIPBytes / 1024 / 1024))
+            }
 
-            chunks.append(data)
+            zipData.append(data)
 
             if result.cur >= result.total - 1 { break }
             chunkIdx += 1
         }
 
-        let zipData = chunks.reduce(Data(), +)
-        let ppfxData = try extractPPFX(from: zipData)
-        return try PHCProjectParser.parse(ppfxData: ppfxData)
+        guard let ppfxData = try extractProjectFile(named: "project.ppfx", from: zipData, required: true) else {
+            throw PHCClientError.transport(PHCLocalization.string("%@ not found in ZIP", "project.ppfx"))
+        }
+        let tpfxData = try extractProjectFile(named: "project.tpfx", from: zipData, required: false)
+        return try PHCProjectParser.parse(ppfxData: ppfxData, tpfxData: tpfxData)
     }
 
     func setPower(_ ref: ChannelRef, on: Bool) async throws {
@@ -252,12 +273,15 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
     }
 
     private func parseResponse(_ data: Data) throws -> RPCResult {
+        guard data.count <= ProjectDownloadLimits.maxXMLRPCResponseBytes else {
+            throw PHCClientError.transport(PHCLocalization.string("XML-RPC response exceeds %d MB", ProjectDownloadLimits.maxXMLRPCResponseBytes / 1024 / 1024))
+        }
         guard let xml = String(data: data, encoding: .isoLatin1) ?? String(data: data, encoding: .utf8) else {
-            throw PHCClientError.transport("Non-text XML-RPC response")
+            throw PHCClientError.transport(PHCLocalization.string("Non-text XML-RPC response"))
         }
         if xml.contains("<fault>") {
             let msg = xml.between("<string>", and: "</string>") ?? "unknown fault"
-            throw PHCClientError.transport("STM fault: \(msg)")
+            throw PHCClientError.transport(PHCLocalization.string("STM fault: %@", msg))
         }
         let ints = xml.allMatches(between: "<i4>", and: "</i4>").compactMap(Int.init)
 
@@ -269,20 +293,46 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
         return RPCResult(intArray: ints, base64: b64, cur: cur, total: total)
     }
 
+    private func validateReadFileResult(_ result: RPCResult, expectedChunk: Int) throws {
+        guard (1...ProjectDownloadLimits.maxReadFileChunks).contains(result.total) else {
+            throw PHCClientError.transport(PHCLocalization.string("readFile reported invalid chunk total %d", result.total))
+        }
+        guard result.cur == expectedChunk else {
+            throw PHCClientError.transport(PHCLocalization.string("readFile returned chunk %d, expected %d", result.cur, expectedChunk))
+        }
+        guard (0..<result.total).contains(result.cur) else {
+            throw PHCClientError.transport(PHCLocalization.string("readFile chunk %d is outside total %d", result.cur, result.total))
+        }
+    }
+
     // MARK: - ZIP extraction
 
-    /// Extracts `project.ppfx` from the ZIP returned by the STM's readFile calls.
+    /// Extracts a project file from the ZIP returned by the STM's readFile calls.
     /// Uses ZIPFoundation which reads the central directory (end of file) and handles
     /// data descriptors, bit-3 flags, and raw DEFLATE correctly.
-    private func extractPPFX(from zip: Data) throws -> Data {
+    private func extractProjectFile(named name: String, from zip: Data, required: Bool) throws -> Data? {
         guard let archive = Archive(data: zip, accessMode: .read) else {
-            throw PHCClientError.transport("Could not open project ZIP archive")
+            throw PHCClientError.transport(PHCLocalization.string("Could not open project ZIP archive"))
         }
-        guard let entry = archive["project.ppfx"] else {
-            throw PHCClientError.transport("project.ppfx not found in ZIP")
+        guard let entry = archive[name] else {
+            if !required { return nil }
+            throw PHCClientError.transport(PHCLocalization.string("%@ not found in ZIP", name))
+        }
+        guard entry.uncompressedSize <= UInt64(ProjectDownloadLimits.maxProjectXMLBytes) else {
+            throw PHCClientError.transport(PHCLocalization.string("%@ exceeds %d MB", name, ProjectDownloadLimits.maxProjectXMLBytes / 1024 / 1024))
         }
         var result = Data()
-        _ = try archive.extract(entry) { result.append($0) }
+        var exceededLimit = false
+        _ = try archive.extract(entry) { chunk in
+            guard result.count + chunk.count <= ProjectDownloadLimits.maxProjectXMLBytes else {
+                exceededLimit = true
+                return
+            }
+            result.append(chunk)
+        }
+        guard !exceededLimit else {
+            throw PHCClientError.transport(PHCLocalization.string("%@ exceeds %d MB", name, ProjectDownloadLimits.maxProjectXMLBytes / 1024 / 1024))
+        }
         return result
     }
 }
@@ -291,9 +341,9 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
 
 private enum InputEvent: Int {
     case press = 2
-    case longPress = 3       // hold → start movement
+    case longPress = 3       // hold → stop movement
     case release = 4
-    case doublePress = 5     // "click confirmed" → stop pulse
+    case doublePress = 5     // "click confirmed" → start pulse
 }
 
 // MARK: - ChannelRef extensions for bus addressing

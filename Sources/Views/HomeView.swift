@@ -121,7 +121,16 @@ struct HomeView: View {
     private func phaseContent<Content: View>(@ViewBuilder _ content: (PHCProject) -> Content) -> some View {
         switch store.phase {
         case .connecting:
-            ProgressView("Connecting…")
+            VStack(spacing: 18) {
+                Image("Logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 96, height: 96)
+                    .clipShape(RoundedRectangle(cornerRadius: 21, style: .continuous))
+                    .shadow(color: .black.opacity(0.15), radius: 5, y: 2)
+                ProgressView("Connecting…")
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .failed(let message):
             ContentUnavailableView {
                 Label("Can't reach the PHC", systemImage: "wifi.exclamationmark")
@@ -255,6 +264,8 @@ struct DeviceGroup: Identifiable {
     /// Icon for a section: keyword-match the (German/English) category name, then
     /// fall back to the device kind. Keyword lists are shared with the parser.
     private static func symbol(for category: String, kind: DeviceKind) -> String {
+        if PHCKeywords.matches(PHCKeywords.panic, category) { return "exclamationmark.triangle.fill" }
+        if PHCKeywords.matches(PHCKeywords.presenceSimulation, category) { return "person.crop.circle.badge.checkmark" }
         if PHCKeywords.matches(PHCKeywords.shutter, category) { return "blinds.horizontal.closed" }
         if PHCKeywords.matches(PHCKeywords.outlet, category)  { return "powerplug.fill" }
         if PHCKeywords.matches(PHCKeywords.vent, category)    { return "wind" }

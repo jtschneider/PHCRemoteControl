@@ -24,6 +24,12 @@ enum PHCKeywords {
     /// JRM "Shutter"), so this is the only signal: the installer's own wording.
     static let jalousie = ["jalousie", "raffstore", "lamelle", "lamellen",
                            "venetian", "slat"]
+    static let panic = ["panik", "panic", "alarm", "notfall", "notruf",
+                        "emergency", "sos", "security", "sicherheit"]
+    static let presenceSimulation = ["anwesenheit", "anwesenheitssimulation",
+                                     "presence", "presence simulation",
+                                     "vacation", "holiday", "urlaub",
+                                     "abwesend", "away", "simulation"]
 
     /// True if `text` contains any of `words` (case-insensitive).
     static func matches(_ words: [String], _ text: String) -> Bool {

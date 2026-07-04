@@ -71,14 +71,25 @@ struct Device: Identifiable, Codable, Sendable {
         kind == .shutter && PHCKeywords.matches(PHCKeywords.jalousie, category + " " + name)
     }
 
+    /// Security-sensitive momentary actions should not fire from an accidental tap.
+    var needsActivationConfirmation: Bool {
+        kind == .scene && PHCKeywords.matches(PHCKeywords.panic, category + " " + name)
+    }
+
     var systemImage: String {
         switch kind {
         case .light:   return state.isOn ? "lightbulb.fill" : "lightbulb"
         case .dimmer:  return state.isOn ? "lightbulb.led.fill" : "lightbulb.led"
         case .outlet:  return "powerplug.fill"
         case .shutter: return "blinds.horizontal.closed"
-        case .scene:   return "play.circle"
+        case .scene:
+            if PHCKeywords.matches(PHCKeywords.panic, category + " " + name) {
+                return "exclamationmark.triangle.fill"
+            }
+            if PHCKeywords.matches(PHCKeywords.presenceSimulation, category + " " + name) {
+                return "person.crop.circle.badge.checkmark"
+            }
+            return "play.circle"
         }
     }
 }
-

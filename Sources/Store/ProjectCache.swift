@@ -8,6 +8,7 @@ enum ProjectCache {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let dir = base.appendingPathComponent("PHCRemoteControl", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        excludeFromBackup(dir)
         return dir
     }
 
@@ -23,10 +24,19 @@ enum ProjectCache {
 
     static func save(_ project: PHCProject, key: String) {
         guard let data = try? JSONEncoder().encode(project) else { return }
-        try? data.write(to: fileURL(for: key), options: .atomic)
+        let url = fileURL(for: key)
+        try? data.write(to: url, options: .atomic)
+        excludeFromBackup(url)
     }
 
     static func clear(key: String) {
         try? FileManager.default.removeItem(at: fileURL(for: key))
+    }
+
+    private static func excludeFromBackup(_ url: URL) {
+        var mutableURL = url
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? mutableURL.setResourceValues(values)
     }
 }

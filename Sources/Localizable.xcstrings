@@ -4,6 +4,66 @@
     "%@%%" : {
 
     },
+    "%@ contains more than %d supported actions" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ enthält mehr als %d unterstützte Aktionen"
+          }
+        }
+      }
+    },
+    "%@ contains too many tool input candidates" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ enthält zu viele Tool-Eingangskandidaten"
+          }
+        }
+      }
+    },
+    "%@ exceeds %d MB" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ überschreitet %d MB"
+          }
+        }
+      }
+    },
+    "%@ is empty" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist leer"
+          }
+        }
+      }
+    },
+    "%@ nesting exceeds %d levels" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@-Verschachtelung überschreitet %d Ebenen"
+          }
+        }
+      }
+    },
+    "%@ not found in ZIP" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ wurde im ZIP nicht gefunden"
+          }
+        }
+      }
+    },
     "Acknowledgments" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -22,6 +82,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktivieren"
+          }
+        }
+      }
+    },
+    "Activate %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ aktivieren"
+          }
+        }
+      }
+    },
+    "Activate security action?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherheitsaktion aktivieren?"
           }
         }
       }
@@ -65,6 +145,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "PHC nicht erreichbar"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbrechen"
           }
         }
       }
@@ -131,6 +221,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbinden…"
+          }
+        }
+      }
+    },
+    "Could not encode project XML as UTF-8" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt-XML konnte nicht als UTF-8 kodiert werden"
+          }
+        }
+      }
+    },
+    "Could not open project ZIP archive" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt-ZIP-Archiv konnte nicht geöffnet werden"
+          }
+        }
+      }
+    },
+    "Could not parse %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ konnte nicht gelesen werden"
           }
         }
       }
@@ -222,6 +342,26 @@
         }
       }
     },
+    "Lower shutter" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herunterfahren"
+          }
+        }
+      }
+    },
+    "Non-text XML-RPC response" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "XML-RPC-Antwort ist kein Text"
+          }
+        }
+      }
+    },
     "On" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -277,6 +417,56 @@
         }
       }
     },
+    "Project channel label exceeds %d characters" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt-Kanalbezeichnung überschreitet %d Zeichen"
+          }
+        }
+      }
+    },
+    "Project contains more than %d visible channels" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt enthält mehr als %d sichtbare Kanäle"
+          }
+        }
+      }
+    },
+    "Project download exceeded %d chunks" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt-Download überschreitet %d Blöcke"
+          }
+        }
+      }
+    },
+    "Project ZIP exceeds %d MB" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt-ZIP überschreitet %d MB"
+          }
+        }
+      }
+    },
+    "Raise shutter" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hochfahren"
+          }
+        }
+      }
+    },
     "Reload from STM" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -299,6 +489,56 @@
         }
       }
     },
+    "readFile chunk %d is outside total %d" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "readFile-Block %d liegt außerhalb der Gesamtzahl %d"
+          }
+        }
+      }
+    },
+    "readFile chunk %d: empty payload" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "readFile-Block %d: leere Nutzdaten"
+          }
+        }
+      }
+    },
+    "readFile chunk %d: missing or invalid base64" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "readFile-Block %d: Base64 fehlt oder ist ungültig"
+          }
+        }
+      }
+    },
+    "readFile reported invalid chunk total %d" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "readFile meldet eine ungültige Blockanzahl %d"
+          }
+        }
+      }
+    },
+    "readFile returned chunk %d, expected %d" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "readFile lieferte Block %d, erwartet war %d"
+          }
+        }
+      }
+    },
     "Scenes" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -306,6 +546,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Szenen"
+          }
+        }
+      }
+    },
+    "Scene %@: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szene %@: %@"
           }
         }
       }
@@ -321,6 +571,16 @@
         }
       }
     },
+    "Shutter command failed: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rollladenbefehl fehlgeschlagen: %@"
+          }
+        }
+      }
+    },
     "Shutters" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -328,6 +588,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rollläden"
+          }
+        }
+      }
+    },
+    "Slat tilt (experimental)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lamellen (experimentell)"
           }
         }
       }
@@ -342,12 +612,12 @@
         }
       }
     },
-    "Slat tilt (experimental)" : {
+    "STM fault: %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lamellen (experimentell)"
+            "value" : "STM-Fehler: %@"
           }
         }
       }
@@ -363,7 +633,18 @@
         }
       }
     },
+    "This may trigger a panic or security automation." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dies kann eine Panik- oder Sicherheitsautomatik auslösen."
+          }
+        }
+      }
+    },
     "Tilt slats closed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -374,11 +655,22 @@
       }
     },
     "Tilt slats open" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lamellen öffnen"
+          }
+        }
+      }
+    },
+    "XML-RPC response exceeds %d MB" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "XML-RPC-Antwort überschreitet %d MB"
           }
         }
       }

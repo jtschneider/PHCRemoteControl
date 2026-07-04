@@ -171,7 +171,7 @@ final class HomeStore {
         guard let ref = device.ref else { return }
         Task {
             do { try await client.activateScene(ref) }
-            catch { phase = .failed("Scene \(device.name): \(error.localizedDescription)") }
+            catch { phase = .failed(PHCLocalization.string("Scene %@: %@", device.name, error.localizedDescription)) }
         }
     }
 
@@ -212,9 +212,8 @@ final class HomeStore {
                     try await client.moveShutter(ref, command)
                 }
             } catch {
-                phase = .failed("Shutter \(command): \(error.localizedDescription)")
+                phase = .failed(PHCLocalization.string("Shutter command failed: %@", error.localizedDescription))
             }
         }
     }
 }
-

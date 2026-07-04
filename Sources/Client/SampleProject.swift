@@ -23,6 +23,11 @@ extension MockPHCClient {
                    ref: ChannelRef(moduleClass: .jrm, dip: dip, channel: ch),
                    state: DeviceState(shutterPosition: position))
         }
+        func scene(_ name: String, dip: Int, ch: Int, category: String) -> Device {
+            Device(name: name, kind: .scene,
+                   ref: ChannelRef(moduleClass: .emd, dip: dip, channel: ch),
+                   category: category)
+        }
 
         let living = [
             dimmer("Ceiling", dip: 6, ch: 5, brightness: 60),
@@ -46,17 +51,21 @@ extension MockPHCClient {
             light("Desk", dip: 10, ch: 0, on: true),
             outlet("Charger", dip: 10, ch: 1, on: true),
         ]
+        let automation = [
+            scene("Panic Button", dip: 12, ch: 0, category: "Security"),
+            scene("Presence Simulation", dip: 12, ch: 1, category: "Presence Simulation"),
+        ]
 
         let rooms = [
             Room(name: "Living Room", symbol: "sofa", deviceIDs: living.map(\.id)),
             Room(name: "Kitchen", symbol: "fork.knife", deviceIDs: kitchen.map(\.id)),
             Room(name: "Bedroom", symbol: "bed.double", deviceIDs: bedroom.map(\.id)),
             Room(name: "Office", symbol: "desktopcomputer", deviceIDs: office.map(\.id)),
+            Room(name: "Automation", symbol: "switch.2", deviceIDs: automation.map(\.id)),
         ]
 
-        let all = living + kitchen + bedroom + office
+        let all = living + kitchen + bedroom + office + automation
         let devices = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
         return PHCProject(name: "My House", rooms: rooms, devices: devices)
     }
 }
-

@@ -14,22 +14,57 @@ import Foundation
 /// paired by stripping the `heben`/`senken` suffix.
 enum PHCProjectParser {
 
-    struct ParseError: Error { let message: String }
+    struct ParseError: LocalizedError {
+        let message: String
 
-    static func parse(ppfxData: Data) throws -> PHCProject {
+        var errorDescription: String? { message }
+    }
+
+    fileprivate enum Limits {
+        static let maxProjectXMLBytes = 8 * 1024 * 1024
+        static let maxVisuChannels = 4096
+        static let maxChannelTextLength = 512
+        static let maxToolActions = 256
+        static let maxToolCandidates = 4096
+        static let maxLocationDepth = 64
+    }
+
+    static func parse(ppfxData: Data, tpfxData: Data? = nil) throws -> PHCProject {
+        try validateXMLSize(ppfxData, fileName: "project.ppfx")
+
         let parser = Parser()
         let xml = XMLParser(data: ppfxData)
         xml.delegate = parser
-        xml.parse()
-        if let err = parser.error { throw err }
+        guard xml.parse() else {
+            throw parser.error ?? ParseError(message: PHCLocalization.string("Could not parse %@", "project.ppfx"))
+        }
+        if let tpfxData {
+            try validateXMLSize(tpfxData, fileName: "project.tpfx")
+            let toolParser = ToolActionParser()
+            let toolXML = XMLParser(data: tpfxData)
+            toolXML.delegate = toolParser
+            guard toolXML.parse() else {
+                throw toolParser.error ?? ParseError(message: PHCLocalization.string("Could not parse %@", "project.tpfx"))
+            }
+            parser.toolActions = toolParser.actions
+        }
         return parser.buildProject()
     }
 
     static func parse(ppfxString: String) throws -> PHCProject {
         guard let data = ppfxString.data(using: .utf8) else {
-            throw ParseError(message: "Could not encode ppfx string as UTF-8")
+            throw ParseError(message: PHCLocalization.string("Could not encode project XML as UTF-8"))
         }
         return try parse(ppfxData: data)
+    }
+
+    private static func validateXMLSize(_ data: Data, fileName: String) throws {
+        guard !data.isEmpty else {
+            throw ParseError(message: PHCLocalization.string("%@ is empty", fileName))
+        }
+        guard data.count <= Limits.maxProjectXMLBytes else {
+            throw ParseError(message: PHCLocalization.string("%@ exceeds %d MB", fileName, Limits.maxProjectXMLBytes / 1024 / 1024))
+        }
     }
 }
 
@@ -49,6 +84,7 @@ private final class Parser: NSObject, XMLParserDelegate {
     }
 
     var visuChannels: [RawChannel] = []
+    var toolActions: [ToolActionParser.Action] = []
     var projectName = "PHC"
     var error: Error?
 
@@ -93,7 +129,12 @@ private final class Parser: NSObject, XMLParserDelegate {
     }
 
     func parser(_ parser: XMLParser, foundCharacters string: String) {
-        if collectingText { textBuffer += string }
+        guard collectingText else { return }
+        guard textBuffer.count + string.count <= PHCProjectParser.Limits.maxChannelTextLength else {
+            fail(PHCLocalization.string("Project channel label exceeds %d characters", PHCProjectParser.Limits.maxChannelTextLength), parser)
+            return
+        }
+        textBuffer += string
     }
 
     func parser(_ parser: XMLParser,
@@ -103,6 +144,10 @@ private final class Parser: NSObject, XMLParserDelegate {
         if element == "CHA" && collectingText {
             let text = textBuffer.trimmingCharacters(in: .whitespaces)
             if !text.isEmpty {
+                guard visuChannels.count < PHCProjectParser.Limits.maxVisuChannels else {
+                    fail(PHCLocalization.string("Project contains more than %d visible channels", PHCProjectParser.Limits.maxVisuChannels), parser)
+                    return
+                }
                 visuChannels.append(RawChannel(
                     moduleGroup: currentModuleGroup,
                     moduleName: currentModuleName,
@@ -118,7 +163,12 @@ private final class Parser: NSObject, XMLParserDelegate {
     }
 
     func parser(_ parser: XMLParser, parseErrorOccurred err: Error) {
-        error = err
+        if error == nil { error = err }
+    }
+
+    private func fail(_ message: String, _ parser: XMLParser) {
+        error = PHCProjectParser.ParseError(message: message)
+        parser.abortParsing()
     }
 
     // MARK: Project building
@@ -189,6 +239,21 @@ private final class Parser: NSObject, XMLParserDelegate {
             let device = Device(name: label, kind: .scene, ref: ref, category: type)
             roomMap[room, default: (sortIdx, [])].devices.append(device)
             roomMap[room]?.sortIndex = sortIdx
+        }
+
+        // 2c. Selected automation tools from project.tpfx (e.g. panic buttons or
+        //     presence simulation) can be controllable even when they are not
+        //     exported as EMD_VIR visu channels in project.ppfx. Surface them as
+        //     momentary scene/action buttons by simulating their activation input.
+        let existingSceneRefs = Set(roomMap.values.flatMap { entry in
+            entry.devices.compactMap { device -> ChannelRef? in
+                device.kind == .scene ? device.ref : nil
+            }
+        })
+        for action in toolActions where !existingSceneRefs.contains(action.ref) {
+            let device = Device(name: action.name, kind: .scene, ref: action.ref, category: action.category)
+            roomMap[action.room, default: (action.sortIndex, [])].devices.append(device)
+            roomMap[action.room]?.sortIndex = action.sortIndex
         }
 
         // 3. Assemble rooms sorted by sort index then name
@@ -297,6 +362,8 @@ private final class Parser: NSObject, XMLParserDelegate {
     /// symbol choices are unchanged from the original hand-picked set.
     private func roomSymbol(for room: String) -> String {
         let groups: [(symbol: String, synonyms: [String])] = [
+            ("exclamationmark.triangle", ["panik", "panic", "alarm", "notfall", "emergency", "sicherheit", "security"]),
+            ("person.crop.circle.badge.checkmark", ["anwesenheit", "presence", "simulation", "urlaub", "vacation", "abwesend", "away"]),
             ("arrow.down.to.line", ["kg", "ug", "keller", "untergeschoss", "souterrain", "basement", "cellar"]),
             ("house.and.flag",     ["einlieger", "einliegerwohnung", "elw", "annex", "granny", "gästewohnung", "apartment"]),
             ("house",              ["eg", "erdgeschoss", "parterre", "ground", "groundfloor"]),
@@ -309,5 +376,216 @@ private final class Parser: NSObject, XMLParserDelegate {
             return group.symbol
         }
         return "square.split.bottomrightquarter"
+    }
+}
+
+// MARK: - Automation/action tools from project.tpfx
+
+private final class ToolActionParser: NSObject, XMLParserDelegate {
+    struct Action {
+        let name: String
+        let category: String
+        let room: String
+        let sortIndex: Int
+        let ref: ChannelRef
+    }
+
+    private struct Candidate {
+        let index: Int
+        let ref: ChannelRef
+        let isPushButton: Bool
+    }
+
+    var actions: [Action] = []
+    var error: Error?
+
+    private var currentLocation: [String] = []
+    private var currentTool: [String: String]?
+    private var candidates: [Candidate] = []
+    private var currentNode: [String: String]?
+
+    func parser(_ parser: XMLParser,
+                didStartElement element: String,
+                namespaceURI: String?,
+                qualifiedName _: String?,
+                attributes attrs: [String: String]) {
+        switch element {
+        case "PAGE", "LAYER":
+            if let name = attrs["name"], !name.isEmpty {
+                guard currentLocation.count < PHCProjectParser.Limits.maxLocationDepth else {
+                    fail(PHCLocalization.string("%@ nesting exceeds %d levels", "project.tpfx", PHCProjectParser.Limits.maxLocationDepth), parser)
+                    return
+                }
+                currentLocation.append(name)
+            }
+        case "TOOL":
+            currentTool = attrs
+            candidates.removeAll()
+        case "NODE":
+            currentNode = attrs
+        case "VAR":
+            guard let tool = currentTool,
+                  isSupportedActionTool(tool),
+                  let node = currentNode,
+                  node["ntype"] == "ntInput",
+                  attrs["modGrp"] == "Eingangsmodule",
+                  attrs["chGrp"] == "Eingang",
+                  let module = Int(attrs["mod"] ?? ""),
+                  let channel = Int(attrs["cha"] ?? "")
+            else { return }
+            guard candidates.count < PHCProjectParser.Limits.maxToolCandidates else {
+                fail(PHCLocalization.string("%@ contains too many tool input candidates", "project.tpfx"), parser)
+                return
+            }
+
+            let index = Int(node["index"] ?? "") ?? 99
+            let objects = (node["comfortSoftwareObjects"] ?? "").lowercased()
+            let name = (node["name"] ?? "").lowercased()
+            let isPushButton = objects.contains("pushbutton") || name.contains("taster")
+            candidates.append(Candidate(
+                index: index,
+                ref: ChannelRef(moduleClass: .emd, dip: module, channel: channel),
+                isPushButton: isPushButton
+            ))
+        default:
+            break
+        }
+    }
+
+    func parser(_ parser: XMLParser,
+                didEndElement element: String,
+                namespaceURI: String?,
+                qualifiedName _: String?) {
+        switch element {
+        case "TOOL":
+            finishTool(parser)
+        case "NODE":
+            currentNode = nil
+        case "PAGE", "LAYER":
+            if !currentLocation.isEmpty { currentLocation.removeLast() }
+        default:
+            break
+        }
+    }
+
+    func parser(_ parser: XMLParser, parseErrorOccurred err: Error) {
+        if error == nil { error = err }
+    }
+
+    private func finishTool(_ parser: XMLParser) {
+        defer {
+            currentTool = nil
+            candidates.removeAll()
+        }
+        guard let tool = currentTool,
+              isSupportedActionTool(tool),
+              let kind = actionKind(tool),
+              let candidate = preferredCandidate()
+        else { return }
+        guard actions.count < PHCProjectParser.Limits.maxToolActions else {
+            fail(PHCLocalization.string("%@ contains more than %d supported actions", "project.tpfx", PHCProjectParser.Limits.maxToolActions), parser)
+            return
+        }
+
+        let room = currentLocation.last ?? defaultRoom(for: kind)
+        let rawName = tool["bez"].flatMap(nonEmpty)
+            ?? tool["name"].flatMap(nonEmpty)
+            ?? defaultName(for: kind)
+        let name = cleanedName(rawName, kind: kind)
+
+        actions.append(Action(
+            name: name,
+            category: category(for: kind),
+            room: room,
+            sortIndex: sortIndex(for: kind),
+            ref: candidate.ref
+        ))
+    }
+
+    private func preferredCandidate() -> Candidate? {
+        candidates
+            .sorted {
+                if $0.isPushButton != $1.isPushButton { return $0.isPushButton && !$1.isPushButton }
+                return $0.index < $1.index
+            }
+            .first
+    }
+
+    private enum ActionKind { case panic, presence }
+
+    private func isSupportedActionTool(_ attrs: [String: String]) -> Bool {
+        guard attrs["enable"] != "false" else { return false }
+        return actionKind(attrs) != nil
+    }
+
+    private func actionKind(_ attrs: [String: String]) -> ActionKind? {
+        let haystack = [
+            attrs["internalName"],
+            attrs["name"],
+            attrs["bez"],
+            attrs["grp"],
+            attrs["comfortSoftwareGroupType"],
+        ]
+        .compactMap { $0 }
+        .joined(separator: " ")
+        .lowercased()
+
+        if PHCKeywords.matches(PHCKeywords.panic, haystack) { return .panic }
+        if PHCKeywords.matches(PHCKeywords.presenceSimulation, haystack)
+            || haystack.contains("infratec.tools.anwesenheitssimulation") {
+            return .presence
+        }
+        return nil
+    }
+
+    private func category(for kind: ActionKind) -> String {
+        switch kind {
+        case .panic: return "Security"
+        case .presence: return "Presence Simulation"
+        }
+    }
+
+    private func defaultRoom(for kind: ActionKind) -> String {
+        switch kind {
+        case .panic: return "Security"
+        case .presence: return "Automation"
+        }
+    }
+
+    private func defaultName(for kind: ActionKind) -> String {
+        switch kind {
+        case .panic: return "Panic Button"
+        case .presence: return "Presence Simulation"
+        }
+    }
+
+    private func sortIndex(for kind: ActionKind) -> Int {
+        switch kind {
+        case .panic: return 0
+        case .presence: return 90
+        }
+    }
+
+    private func cleanedName(_ raw: String, kind: ActionKind) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch kind {
+        case .panic:
+            return trimmed
+        case .presence:
+            for prefix in ["Anwesenheitssimulation ", "Presence Simulation "] where trimmed.hasPrefix(prefix) {
+                return String(trimmed.dropFirst(prefix.count))
+            }
+            return trimmed
+        }
+    }
+
+    private func nonEmpty(_ value: String) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    private func fail(_ message: String, _ parser: XMLParser) {
+        error = PHCProjectParser.ParseError(message: message)
+        parser.abortParsing()
     }
 }

@@ -4,6 +4,7 @@ import SwiftUI
 struct DeviceCard: View {
     @Environment(HomeStore.self) private var store
     let device: Device
+    @State private var showActivationConfirmation = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -61,9 +62,29 @@ struct DeviceCard: View {
             ShutterControl(device: device)
 
         case .scene:
-            Button("Activate") { store.activateScene(device) }
+            Button("Activate") {
+                if device.needsActivationConfirmation {
+                    showActivationConfirmation = true
+                } else {
+                    store.activateScene(device)
+                }
+            }
                 .buttonStyle(.borderedProminent)
                 .frame(maxWidth: .infinity)
+                .confirmationDialog(
+                    "Activate security action?",
+                    isPresented: $showActivationConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button(role: .destructive) {
+                        store.activateScene(device)
+                    } label: {
+                        Text(verbatim: PHCLocalization.string("Activate %@", device.name))
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This may trigger a panic or security automation.")
+                }
         }
     }
 
@@ -173,9 +194,9 @@ private struct ShutterControl: View {
 
     private func accessibilityLabel(_ command: ShutterCommand) -> LocalizedStringKey {
         switch command {
-        case .up:        return "Open shutter"
+        case .up:        return "Raise shutter"
         case .stop:      return "Stop shutter"
-        case .down:      return "Close shutter"
+        case .down:      return "Lower shutter"
         case .tiltOpen:  return "Tilt slats open"
         case .tiltClose: return "Tilt slats closed"
         }
@@ -210,4 +231,3 @@ private struct ShutterControl: View {
     }
     .environment(store)
 }
-

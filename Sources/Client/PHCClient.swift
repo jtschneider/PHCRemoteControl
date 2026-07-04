@@ -56,3 +56,8 @@ enum PHCClientError: LocalizedError {
     }
 }
 
+enum PHCLocalization {
+    static func string(_ key: String, _ arguments: CVarArg...) -> String {
+        String(format: NSLocalizedString(key, comment: ""), locale: .current, arguments: arguments)
+    }
+}
