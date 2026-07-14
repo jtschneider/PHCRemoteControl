@@ -10,8 +10,9 @@ import Foundation
 ///   - LABEL  = human-readable device name
 ///
 /// AMD `Ausgang` channels with `visu="true"` become lights/outlets.
-/// EMD `Eingang` channels with `visu="true"` and type `Rollo` become shutters,
-/// paired by stripping the `heben`/`senken` suffix.
+/// EMD `Eingang` channels with `visu="true"` and a motor-like type (`Rollo`,
+/// `Lüftung Fenster`, …) become shutter-style controls, paired by stripping the
+/// directional suffix (`heben`/`senken`, `Auf`/`Zu`, …).
 enum PHCProjectParser {
 
     struct ParseError: LocalizedError {
@@ -195,34 +196,38 @@ private final class Parser: NSObject, XMLParserDelegate {
             roomMap[p.room]?.sortIndex = p.sortIdx
         }
 
-        // 2. EMD input channels with Rollo → shutters (pair heben/senken)
-        var rolloDown: [String: (Int, Int)] = [:]   // key → (emdAdr, channelAdr)
-        var rolloUp:   [String: (Int, Int)] = [:]
-        var rolloType: [String: String] = [:]       // key → verbatim TYPE ("Rollo"/"Rollläden")
+        // 2. EMD input channels with motor-like categories → shutter controls
+        //    (pair heben/senken, Auf/Zu, open/close, …).
+        var motorDown: [String: (Int, Int)] = [:]   // key → (emdAdr, channelAdr)
+        var motorUp:   [String: (Int, Int)] = [:]
+        var motorType: [String: String] = [:]       // key → verbatim TYPE ("Rollo", "Lüftung Fenster", …)
 
         for ch in visuChannels
         where ch.moduleGroup == "Eingangsmodule"
             && ch.channelGroup == "Eingang"
         {
             guard let p = parseChannelParts(ch.text), deviceKind(from: p.type) == .shutter else { continue }
-            let key = rolloKey(from: ch.text)
-            rolloType[key] = p.type
-            if ch.text.lowercased().contains("senken") || ch.text.lowercased().contains("lower") {
-                rolloDown[key] = (ch.moduleAdr, ch.channelAdr)
-            } else if ch.text.lowercased().contains("heben") || ch.text.lowercased().contains("raise") {
-                rolloUp[key] = (ch.moduleAdr, ch.channelAdr)
+            let key = motorKey(from: ch.text)
+            motorType[key] = p.type
+            switch motorDirection(from: ch.text) {
+            case .down:
+                motorDown[key] = (ch.moduleAdr, ch.channelAdr)
+            case .up:
+                motorUp[key] = (ch.moduleAdr, ch.channelAdr)
+            case nil:
+                break
             }
         }
 
-        for (key, downInfo) in rolloDown {
-            guard let (sortIdx, room, _, label) = parseRolloName(key) else { continue }
+        for (key, downInfo) in motorDown {
+            guard let (sortIdx, room, _, label) = parseMotorName(key) else { continue }
             let downRef = ChannelRef(moduleClass: .emd, dip: downInfo.0, channel: downInfo.1)
             var upRef: ChannelRef?
-            if let up = rolloUp[key] {
+            if let up = motorUp[key] {
                 upRef = ChannelRef(moduleClass: .emd, dip: up.0, channel: up.1)
             }
             let device = Device(name: label, kind: .shutter, ref: downRef,
-                                shutterUpRef: upRef, category: rolloType[key] ?? "Rollo")
+                                shutterUpRef: upRef, category: motorType[key] ?? "Rollo")
             roomMap[room, default: (sortIdx, [])].devices.append(device)
             roomMap[room]?.sortIndex = sortIdx
         }
@@ -235,6 +240,7 @@ private final class Parser: NSObject, XMLParserDelegate {
         where ch.moduleName == "EMD_VIR" && ch.channelGroup == "Eingang"
         {
             guard let (sortIdx, room, type, label) = parseChannelParts(ch.text) else { continue }
+            guard deviceKind(from: type) != .shutter else { continue }
             let ref = ChannelRef(moduleClass: .emd, dip: ch.moduleAdr, channel: ch.channelAdr)
             let device = Device(name: label, kind: .scene, ref: ref, category: type)
             roomMap[room, default: (sortIdx, [])].devices.append(device)
@@ -295,17 +301,25 @@ private final class Parser: NSObject, XMLParserDelegate {
 
     // MARK: - Helpers
 
-    /// Splits `"N.ROOM : TYPE > LABEL"` into its parts.
+    /// Splits `"N.ROOM : TYPE > LABEL"` into its parts. The category is always
+    /// the project text between the first `:` and the following `>`, trimmed but
+    /// otherwise kept verbatim for the UI.
     /// e.g. `"2.EG : Licht > DL Flur"` → (2, "EG", "Licht", "DL Flur").
     private func parseChannelParts(_ text: String) -> (sortIdx: Int, room: String, type: String, label: String)? {
-        let colonSplit = text.components(separatedBy: " : ")
-        guard colonSplit.count == 2 else { return nil }
-        let arrowSplit = colonSplit[1].components(separatedBy: " > ")
-        guard arrowSplit.count == 2 else { return nil }
-        let dotSplit = colonSplit[0].components(separatedBy: ".")
+        guard let colon = text.firstIndex(of: ":"),
+              let arrow = text[colon...].firstIndex(of: ">")
+        else { return nil }
+
+        let prefix = text[..<colon].trimmingCharacters(in: .whitespaces)
+        let type = text[text.index(after: colon)..<arrow].trimmingCharacters(in: .whitespaces)
+        let label = text[text.index(after: arrow)...].trimmingCharacters(in: .whitespaces)
+        guard !type.isEmpty, !label.isEmpty else { return nil }
+
+        let dotSplit = prefix.components(separatedBy: ".")
         let sortIdx = Int(dotSplit.first ?? "") ?? 99
-        let room = dotSplit.dropFirst().joined(separator: ".")
-        return (sortIdx, room, arrowSplit[0], arrowSplit[1])
+        let room = dotSplit.dropFirst().joined(separator: ".").trimmingCharacters(in: .whitespaces)
+        guard !room.isEmpty else { return nil }
+        return (sortIdx, room, type, label)
     }
 
     /// Parses `"N.ROOM : TYPE > LABEL"` → (sortIndex, room, kind, label).
@@ -314,24 +328,15 @@ private final class Parser: NSObject, XMLParserDelegate {
         return (p.sortIdx, p.room, deviceKind(from: p.type), p.label)
     }
 
-    /// Returns the key used to pair heben/senken: strips direction suffix.
-    private func rolloKey(from text: String) -> String {
-        let colonSplit = text.components(separatedBy: " : ")
-        guard colonSplit.count == 2 else { return text }
-        let rest = colonSplit[1]   // "Rollo > Bad heben"
-        let arrowSplit = rest.components(separatedBy: " > ")
-        guard arrowSplit.count == 2 else { return text }
-        var label = arrowSplit[1]
-        for suffix in [" heben", " senken", " heben ", " senken "] {
-            if label.hasSuffix(suffix.trimmingCharacters(in: .whitespaces)) {
-                label = String(label.dropLast(suffix.trimmingCharacters(in: .whitespaces).count))
-            }
-        }
-        return colonSplit[0] + " : Rollo > " + label.trimmingCharacters(in: .whitespaces)
+    /// Returns the key used to pair directional motor channels: strips direction suffix.
+    private func motorKey(from text: String) -> String {
+        guard let p = parseChannelParts(text) else { return text }
+        let label = stripMotorDirectionSuffix(from: p.label)
+        return "\(p.sortIdx).\(p.room) : \(p.type) > \(label)"
     }
 
-    /// Parses a rollo key like `"2.EG : Rollo > Bad"` into (sortIdx, room, kind, label).
-    private func parseRolloName(_ key: String) -> (Int, String, DeviceKind, String)? {
+    /// Parses a motor key like `"2.EG : Rollo > Bad"` into (sortIdx, room, kind, label).
+    private func parseMotorName(_ key: String) -> (Int, String, DeviceKind, String)? {
         return parseChannelName(key)
     }
 
@@ -339,9 +344,50 @@ private final class Parser: NSObject, XMLParserDelegate {
     /// control kind via German/English keywords (see `PHCKeywords`). Defaults to
     /// light for anything unrecognised.
     private func deviceKind(from typeStr: String) -> DeviceKind {
-        if PHCKeywords.matches(PHCKeywords.shutter, typeStr) { return .shutter }
+        if PHCKeywords.matches(PHCKeywords.shutter, typeStr)
+            || PHCKeywords.matches(PHCKeywords.motorizedWindow, typeStr) { return .shutter }
         if PHCKeywords.matches(PHCKeywords.outlet, typeStr)  { return .outlet }
         return .light
+    }
+
+    private enum MotorDirection { case up, down }
+
+    private func motorDirection(from text: String) -> MotorDirection? {
+        guard let label = parseChannelParts(text)?.label else { return nil }
+        let words = normalizedWords(label)
+        guard let last = words.last else { return nil }
+        if ["senken", "lower", "down", "zu", "close", "closing", "schliessen", "schließen"].contains(last) {
+            return .down
+        }
+        if ["heben", "raise", "up", "auf", "open", "opening", "offnen", "oeffnen", "öffnen"].contains(last) {
+            return .up
+        }
+        return nil
+    }
+
+    private func stripMotorDirectionSuffix(from label: String) -> String {
+        var parts = label.split(separator: " ").map(String.init)
+        guard let last = parts.last else { return label.trimmingCharacters(in: .whitespaces) }
+        let normalizedLast = normalize(last)
+        let directionWords = [
+            "heben", "raise", "up", "auf", "open", "opening", "offnen", "oeffnen", "öffnen",
+            "senken", "lower", "down", "zu", "close", "closing", "schliessen", "schließen",
+        ]
+        if directionWords.contains(normalizedLast) {
+            parts.removeLast()
+            return parts.joined(separator: " ").trimmingCharacters(in: .whitespaces)
+        }
+        return label.trimmingCharacters(in: .whitespaces)
+    }
+
+    private func normalizedWords(_ text: String) -> [String] {
+        text.split(separator: " ").map { normalize(String($0)) }
+    }
+
+    private func normalize(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            .lowercased()
     }
 
     /// Display order of device categories within a floor: lights, then shutters,

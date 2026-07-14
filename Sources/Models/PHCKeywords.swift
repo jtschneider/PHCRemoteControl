@@ -10,6 +10,9 @@ import Foundation
 enum PHCKeywords {
     static let shutter = ["roll", "jalousie", "shutter", "blind", "raffstore",
                           "markise", "beschattung", "sonnenschutz", "store"]
+    static let motorizedWindow = ["lüftung fenster", "luftung fenster",
+                                  "dachfenster", "fensterantrieb",
+                                  "roof window", "window opener"]
     static let outlet  = ["steckdose", "dose", "schuko", "stecker", "outlet",
                           "socket", "receptacle", "plug", "pumpe", "pump",
                           "zirkulation"]
