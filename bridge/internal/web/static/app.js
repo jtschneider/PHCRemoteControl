@@ -28,6 +28,13 @@
   var favouriteKey = "phc-bridge:favourites:v1";
   var favouriteDrag = null;
 
+  // Live state kept current by SSE, so a client-side page swap can re-apply the
+  // authoritative state to freshly server-rendered (possibly prefetched) markup.
+  var deviceStates = {};
+  var connectionState = { status: "disconnected", stale: true };
+  var prefetchCache = {};
+  var events = null;
+
   function deviceRoot(deviceID) {
     var nodes = document.querySelectorAll("[data-device-id]");
     for (var i = 0; i < nodes.length; i += 1) {
@@ -60,10 +67,19 @@
 
   function applySnapshot(snapshot) {
     lastRevision = snapshot.revision || 0;
+    connectionState = { status: snapshot.connection, stale: snapshot.stale };
+    deviceStates = {};
     setConnection(snapshot.connection, snapshot.stale);
     Object.keys(snapshot.devices || {}).forEach(function (deviceID) {
+      deviceStates[deviceID] = snapshot.devices[deviceID].power;
       setPower(deviceID, snapshot.devices[deviceID].power);
     });
+  }
+
+  // Re-apply the known live state to the current DOM after a navigation swap.
+  function applyLiveState() {
+    setConnection(connectionState.status, connectionState.stale);
+    Object.keys(deviceStates).forEach(function (deviceID) { setPower(deviceID, deviceStates[deviceID]); });
   }
 
   function refreshSnapshot() {
@@ -246,6 +262,92 @@
     });
   }
 
+  // --- Client-side navigation (swaps only <main>; the Go template still renders
+  //     it, so it remains the sole structural renderer). ---
+
+  function isAppPage(pathname) {
+    return pathname === "/" || pathname === "/settings" || pathname === "/acknowledgments" ||
+      pathname.indexOf("/floors/") === 0;
+  }
+
+  function fetchPage(url) {
+    var pending = fetch(url, { headers: { "Accept": "text/html" }, credentials: "same-origin" })
+      .then(function (response) { if (!response.ok) throw new Error("navigation " + response.status); return response.text(); })
+      .then(function (html) {
+        var doc = new DOMParser().parseFromString(html, "text/html");
+        var main = doc.querySelector("main");
+        if (!main) throw new Error("no main element");
+        return { mainHTML: main.innerHTML, title: doc.title, pathname: new URL(url, window.location.origin).pathname };
+      });
+    prefetchCache[url] = pending;
+    return pending;
+  }
+
+  function prefetch(url) {
+    if (!prefetchCache[url]) fetchPage(url).catch(function () { delete prefetchCache[url]; });
+  }
+
+  function updateNav(pathname) {
+    document.querySelectorAll(".site-header nav a").forEach(function (link) {
+      var linkPath = new URL(link.href, window.location.origin).pathname;
+      var current = (linkPath === "/" && (pathname === "/" || pathname.indexOf("/floors/") === 0)) ||
+        (linkPath !== "/" && linkPath === pathname);
+      if (current) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
+    });
+  }
+
+  function navigateTo(url, push) {
+    (prefetchCache[url] || fetchPage(url)).then(function (page) {
+      var main = document.querySelector("main");
+      if (main) main.innerHTML = page.mainHTML;
+      if (page.title) document.title = page.title;
+      if (push) window.history.pushState({}, "", url);
+      updateNav(page.pathname);
+      window.scrollTo(0, 0);
+      initPage(true);
+    }).catch(function () {
+      delete prefetchCache[url];
+      window.location.href = url; // fall back to a full navigation
+    });
+  }
+
+  // Per-page (re)initialisation; run at load and after every navigation swap.
+  function initPage(applyState) {
+    renderFavourites(loadFavourites());
+    document.querySelectorAll("details[data-category]").forEach(function (details) {
+      var key = "phc-bridge:category:" + window.location.pathname + ":" + details.dataset.category;
+      var saved = window.localStorage.getItem(key);
+      if (saved !== null) details.open = saved === "open";
+      details.addEventListener("toggle", function () {
+        window.localStorage.setItem(key, details.open ? "open" : "closed");
+      });
+    });
+    if (applyState) applyLiveState();
+  }
+
+  function openEvents() {
+    events = new EventSource("/api/v1/events");
+    events.addEventListener("snapshot", function (event) { applySnapshot(JSON.parse(event.data)); });
+    events.addEventListener("state", function (event) {
+      var value = JSON.parse(event.data);
+      if (updateRevision(value.revision)) {
+        deviceStates[value.deviceID] = value.power;
+        setPower(value.deviceID, value.power);
+      }
+    });
+    events.addEventListener("connection", function (event) {
+      var value = JSON.parse(event.data);
+      if (updateRevision(value.revision)) {
+        connectionState = { status: value.status, stale: value.stale };
+        setConnection(value.status, value.stale);
+      }
+    });
+    events.addEventListener("project", function () { window.location.reload(); });
+    events.onerror = function () { setConnection("disconnected", true, text.liveInterrupted); };
+  }
+
+  // --- Wiring ---
+
   document.addEventListener("click", function (event) {
     var command = event.target.closest("[data-action]");
     if (command) { sendCommand(command); return; }
@@ -254,7 +356,24 @@
     var move = event.target.closest("[data-favorite-move]");
     if (move) { moveFavourite(move); return; }
     var reload = event.target.closest("[data-project-reload]");
-    if (reload) reloadProject(reload);
+    if (reload) { reloadProject(reload); return; }
+
+    // Internal navigation → swap in place instead of a full reload.
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey ||
+      event.shiftKey || event.altKey) return;
+    var link = event.target.closest("a[href]");
+    if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
+    var dest = new URL(link.href, window.location.origin);
+    if (dest.origin !== window.location.origin || !isAppPage(dest.pathname)) return;
+    event.preventDefault();
+    navigateTo(dest.href, true);
+  });
+
+  document.addEventListener("pointerover", function (event) {
+    var link = event.target.closest && event.target.closest("a[href]");
+    if (!link) return;
+    var dest = new URL(link.href, window.location.origin);
+    if (dest.origin === window.location.origin && isAppPage(dest.pathname)) prefetch(dest.href);
   });
 
   document.addEventListener("pointerdown", function (event) {
@@ -265,25 +384,15 @@
   document.addEventListener("pointerup", finishFavouriteDrag);
   document.addEventListener("pointercancel", finishFavouriteDrag);
 
-  document.querySelectorAll("details[data-category]").forEach(function (details) {
-    var key = "phc-bridge:category:" + window.location.pathname + ":" + details.dataset.category;
-    var saved = window.localStorage.getItem(key);
-    if (saved !== null) details.open = saved === "open";
-    details.addEventListener("toggle", function () { window.localStorage.setItem(key, details.open ? "open" : "closed"); });
+  window.addEventListener("popstate", function () {
+    if (isAppPage(window.location.pathname)) navigateTo(window.location.href, false);
   });
 
-  renderFavourites(loadFavourites());
+  // Close the SSE stream when the page is cached (bfcache) and reopen on
+  // restore, so Back/Forward can restore instantly instead of full-reloading.
+  window.addEventListener("pagehide", function () { if (events) { events.close(); events = null; } });
+  window.addEventListener("pageshow", function () { if (!events) openEvents(); });
 
-  var events = new EventSource("/api/v1/events");
-  events.addEventListener("snapshot", function (event) { applySnapshot(JSON.parse(event.data)); });
-  events.addEventListener("state", function (event) {
-    var value = JSON.parse(event.data);
-    if (updateRevision(value.revision)) setPower(value.deviceID, value.power);
-  });
-  events.addEventListener("connection", function (event) {
-    var value = JSON.parse(event.data);
-    if (updateRevision(value.revision)) setConnection(value.status, value.stale);
-  });
-  events.addEventListener("project", function () { window.location.reload(); });
-  events.onerror = function () { setConnection("disconnected", true, text.liveInterrupted); };
+  initPage(false);
+  openEvents();
 }());

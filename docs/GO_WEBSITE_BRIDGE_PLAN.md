@@ -180,7 +180,7 @@ properties, `prefers-color-scheme` light/dark, and flexbox/grid for a responsive
 phone-and-desktop layout. Minimal is not unstyled — touch targets stay ≥44px and
 text stays legible. No preprocessor, utility framework, or purge step.
 
-**JavaScript — one small file, three jobs only.** `app.js` is plain, framework-
+**JavaScript — one small file, a few tight jobs.** `app.js` is plain, framework-
 free, and uses event delegation. It does exactly:
 
 1. **Command dispatch** — a single delegated click handler on `[data-action]`
@@ -189,11 +189,23 @@ free, and uses event delegation. It does exactly:
    fire, and the API does not auto-retry), and re-enables it on completion.
 2. **State updates** — one `EventSource('/api/v1/events')`; `state` events patch
    the matching `[data-role]` text and `aria-pressed`, `connection` events update
-   a status region, and a `project` event triggers `location.reload()`.
+   a status region, and a `project` event triggers `location.reload()`. A small
+   in-memory state map is kept current so a swapped-in page (below) shows live
+   state immediately.
 3. **Confirmation** — a native `confirm()` for panic/security actions.
+4. **In-place navigation** — intercepts internal links, fetches the target page,
+   and swaps only its `<main>` (with hover/`pointerdown` prefetch and History-API
+   Back/Forward), keeping one persistent SSE across navigations so each hop is
+   crisp and avoids re-subscribe churn. **The Go template still renders that
+   `<main>`, so it remains the sole structural renderer** — JavaScript lifts the
+   server's markup, never builds device cards. The SSE also closes on `pagehide`
+   and reopens on `pageshow`, so full Back/Forward can restore from bfcache.
 
-It does not route, template, store authoritative state, or render device markup.
-It stays a few kilobytes and needs no minification for LAN delivery.
+It stores no authoritative state, never renders device markup, and needs no
+minification for LAN delivery. This is progressive enhancement of navigation,
+**not a PWA** — no service worker and no offline cache (see "Why this is not a
+PWA"); an unreachable bridge simply fails to navigate rather than serving a stale
+shell.
 
 **Control requires JavaScript, by design.** The security boundary (§14) accepts
 only JSON `POST`s with a matching `Origin`, which a plain HTML `<form>` cannot
