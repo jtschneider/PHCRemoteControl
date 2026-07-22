@@ -1,0 +1,18 @@
+{{define "floor"}}
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/?lang={{.Lang}}">&lsaquo; {{.Text.Back}}</a></nav>
+<header class="page-heading">
+  <div>
+    <p class="eyebrow">{{.Text.Floors}}</p>
+    <h1>{{.Floor.Name}}</h1>
+  </div>
+</header>
+
+{{range .Floor.Categories}}
+<details class="category" data-category="{{.Name}}" open>
+  <summary><span>{{.Name}}</span><span class="category-count">{{len .Devices}}</span></summary>
+  <div class="device-list">
+    {{range .Devices}}{{template "device" .}}{{end}}
+  </div>
+</details>
+{{end}}
+{{end}}

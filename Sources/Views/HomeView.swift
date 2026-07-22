@@ -258,6 +258,7 @@ struct DeviceGroup: Identifiable {
         case .shutter:        return "Shutters"
         case .outlet:         return "Outlets"
         case .scene:          return "Scenes"
+        case .button:         return "Buttons"
         }
     }
 
@@ -275,6 +276,7 @@ struct DeviceGroup: Identifiable {
         case .shutter:        return "blinds.horizontal.closed"
         case .outlet:         return "powerplug.fill"
         case .scene:          return "play.circle"
+        case .button:         return "button.programmable"
         }
     }
 }

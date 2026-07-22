@@ -1,5 +1,5 @@
 # Private installation data (downloaded from the STM at runtime; never commit)
-project/
+/project/
 handbook/
 *.zip
 
@@ -20,3 +20,9 @@ PHCRemoteControl.xcodeproj/
 # Xcode build output (xcodebuild default SYMROOT)
 build/
 setup_PHC/
+
+# Go bridge build output
+bridge/dist/
+
+# macOS
+.DS_Store

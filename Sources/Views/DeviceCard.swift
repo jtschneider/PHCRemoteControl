@@ -5,6 +5,7 @@ struct DeviceCard: View {
     @Environment(HomeStore.self) private var store
     let device: Device
     @State private var showActivationConfirmation = false
+    @State private var pendingLongPress = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -13,6 +14,25 @@ struct DeviceCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
+        .confirmationDialog(
+            "Activate security action?",
+            isPresented: $showActivationConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(role: .destructive) {
+                if pendingLongPress {
+                    store.longPressButton(device)
+                } else {
+                    store.activateScene(device)
+                }
+            } label: {
+                let key = pendingLongPress ? "Long press %@" : "Activate %@"
+                Text(verbatim: PHCLocalization.string(key, device.name))
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This may trigger a panic or security automation.")
+        }
     }
 
     private var header: some View {
@@ -64,6 +84,7 @@ struct DeviceCard: View {
         case .scene:
             Button("Activate") {
                 if device.needsActivationConfirmation {
+                    pendingLongPress = false
                     showActivationConfirmation = true
                 } else {
                     store.activateScene(device)
@@ -71,20 +92,31 @@ struct DeviceCard: View {
             }
                 .buttonStyle(.borderedProminent)
                 .frame(maxWidth: .infinity)
-                .confirmationDialog(
-                    "Activate security action?",
-                    isPresented: $showActivationConfirmation,
-                    titleVisibility: .visible
-                ) {
-                    Button(role: .destructive) {
+
+        case .button:
+            HStack(spacing: 12) {
+                Button("Activate") {
+                    if device.needsActivationConfirmation {
+                        pendingLongPress = false
+                        showActivationConfirmation = true
+                    } else {
                         store.activateScene(device)
-                    } label: {
-                        Text(verbatim: PHCLocalization.string("Activate %@", device.name))
                     }
-                    Button("Cancel", role: .cancel) {}
-                } message: {
-                    Text("This may trigger a panic or security automation.")
                 }
+                .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity)
+
+                Button("Long press") {
+                    if device.needsActivationConfirmation {
+                        pendingLongPress = true
+                        showActivationConfirmation = true
+                    } else {
+                        store.longPressButton(device)
+                    }
+                }
+                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity)
+            }
         }
     }
 
@@ -93,7 +125,7 @@ struct DeviceCard: View {
         case .light, .outlet: return device.state.isOn
         case .dimmer: return device.state.brightness > 0
         case .shutter: return device.state.shutterMoving != nil
-        case .scene: return false
+        case .scene, .button: return false
         }
     }
 }

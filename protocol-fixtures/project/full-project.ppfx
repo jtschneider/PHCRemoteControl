@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<PROJECT name="Synthetic Full" ver="3.2.8">
+  <STM adr="0" ver="V3">
+    <MODS grp="Eingangsmodule">
+      <MOD adr="4" name="EMD_RUE">
+        <CHAS grp="Eingang">
+          <CHA adr="0" visu="true">1.EG : Rollo &gt; Küche senken</CHA>
+          <CHA adr="1" visu="true">1.EG : Rollo &gt; Küche heben</CHA>
+          <CHA adr="2" visu="true">2.DG : Lüftung Fenster &gt; Flur Zu</CHA>
+          <CHA adr="3" visu="true">2.DG : Lüftung Fenster &gt; Flur Auf</CHA>
+          <CHA adr="4" visu="true">1.EG : Jalousie &gt; Terrasse schließen</CHA>
+          <CHA adr="5" visu="true">1.EG : Jalousie &gt; Terrasse öffnen</CHA>
+          <CHA adr="6" visu="true">1.EG : Rollo &gt; Gästezimmer senken</CHA>
+          <CHA adr="7" visu="true">1.EG : Taster &gt; Unbekannt heben</CHA>
+          <CHA adr="8" visu="false">1.EG : Taster &gt; Unsichtbar</CHA>
+          <CHA adr="9" visu="true">Nicht im Namensformat</CHA>
+        </CHAS>
+      </MOD>
+      <MOD adr="7" name="EMD_VIR">
+        <CHAS grp="Eingang">
+          <CHA adr="0" visu="true">4.Zentral : Licht &gt; Alles aus</CHA>
+          <CHA adr="1" visu="true">4.Zentral : Rollläden &gt; EG Zu</CHA>
+          <CHA adr="2" visu="true">4.Zentral : Sicherheit &gt; Panik</CHA>
+          <CHA adr="3" visu="false">4.Zentral : Licht &gt; Unsichtbare Szene</CHA>
+        </CHAS>
+      </MOD>
+    </MODS>
+    <MODS grp="Ausgangsmodule">
+      <MOD adr="2" name="AMD230_16">
+        <CHAS grp="Ausgang">
+          <CHA adr="0" visu="true">1.EG : Licht &gt; Licht 10</CHA>
+          <CHA adr="1" visu="true">1.EG : Licht &gt; Licht 2</CHA>
+          <CHA adr="2" visu="true">1.EG : Steckdose &gt; Verstärker</CHA>
+        </CHAS>
+      </MOD>
+    </MODS>
+  </STM>
+</PROJECT>

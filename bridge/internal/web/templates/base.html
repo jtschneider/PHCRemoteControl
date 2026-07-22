@@ -1,0 +1,61 @@
+{{define "base.html"}}<!doctype html>
+<html lang="{{.Lang}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>{{.Title}} - {{.Text.AppName}}</title>
+  <link rel="icon" href="/static/logo.png" type="image/png" sizes="1024x1024">
+  <link rel="icon" href="/static/logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/logo.png">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body
+  data-lang="{{.Lang}}"
+  data-text-on="{{.Text.On}}"
+  data-text-off="{{.Text.Off}}"
+  data-text-unknown="{{.Text.Unknown}}"
+  data-text-turn-on="{{.Text.TurnOn}}"
+  data-text-turn-off="{{.Text.TurnOff}}"
+  data-text-connected="{{.Text.Connected}}"
+  data-text-disconnected="{{.Text.Disconnected}}"
+  data-text-stale="{{.Text.Stale}}"
+  data-text-live-interrupted="{{.Text.LiveInterrupted}}"
+  data-text-command-sent="{{.Text.CommandSent}}"
+  data-text-command-accepted="{{.Text.CommandAccepted}}"
+  data-text-command-failed="{{.Text.CommandFailed}}"
+  data-text-unsupported="{{.Text.Unsupported}}"
+  data-text-device-missing="{{.Text.DeviceMissing}}"
+  data-text-stm-unavailable="{{.Text.STMUnavailable}}"
+  data-text-command-timeout="{{.Text.CommandTimeout}}"
+  data-text-reloading="{{.Text.Reloading}}"
+  data-text-reload-failed="{{.Text.ReloadFailed}}"
+  data-text-favourite="{{.Text.Favourite}}"
+  data-text-remove-favourite="{{.Text.RemoveFavourite}}">
+  <header class="site-header">
+    <a class="brand" href="/?lang={{.Lang}}" aria-label="{{.Text.AppName}}">
+      <img src="/static/logo.svg" alt="" width="40" height="40">
+      <strong>{{.Text.AppName}}</strong>
+    </a>
+    <nav aria-label="Primary">
+      <a {{if or (eq .Page "home") (eq .Page "floor")}}aria-current="page"{{end}} href="/?lang={{.Lang}}">{{.Text.Floors}}</a>
+      <a {{if eq .Page "settings"}}aria-current="page"{{end}} href="/settings?lang={{.Lang}}">{{.Text.Settings}}</a>
+    </nav>
+  </header>
+  <div class="connection-bar is-{{.ConnectionKey}}" data-role="connection-region">
+    <span class="status-dot" aria-hidden="true"></span>
+    <output data-role="connection-status" aria-live="polite">{{if eq .ConnectionKey "connected"}}{{.Text.Connected}}{{else if eq .ConnectionKey "stale"}}{{.Text.Stale}}{{else}}{{.Text.Disconnected}}{{end}}</output>
+  </div>
+  <noscript><p class="noscript">{{.Text.NoJavaScript}}</p></noscript>
+  <main>
+    {{if eq .Page "home"}}{{template "home" .}}{{end}}
+    {{if eq .Page "floor"}}{{template "floor" .}}{{end}}
+    {{if eq .Page "settings"}}{{template "settings" .}}{{end}}
+    {{if eq .Page "acknowledgments"}}{{template "acknowledgments" .}}{{end}}
+  </main>
+  <footer>
+    <a href="/acknowledgments?lang={{.Lang}}">{{.Text.Acknowledgments}}</a>
+  </footer>
+</body>
+</html>{{end}}

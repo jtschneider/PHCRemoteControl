@@ -26,6 +26,10 @@ protocol PHCClient: AnyObject, Sendable {
     /// simulating a button tap on its EMD channel.
     func activateScene(_ ref: ChannelRef) async throws
 
+    /// Hold an otherwise unclassified EMD input. This preserves access to PHC
+    /// functions whose project category or wiring the parser does not understand.
+    func longPressButton(_ ref: ChannelRef) async throws
+
     /// Tell the client which devices to poll (e.g. after loading a cached
     /// project, where `loadProject` was skipped). No-op for clients that don't poll.
     func registerDevices(_ devices: [Device])

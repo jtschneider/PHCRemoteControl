@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<PROJECT name="Synthetic AMD" ver="3.2.8">
+  <STM adr="0" ver="V3">
+    <MODS grp="Ausgangsmodule">
+      <MOD adr="1" name="AMD230_16">
+        <CHAS grp="Ausgang">
+          <CHA adr="0" visu="true">1.EG : Licht &gt; Deckenlicht</CHA>
+          <CHA adr="1" visu="true">1.EG : Steckdose &gt; Fernseher</CHA>
+          <CHA adr="2" visu="false">1.EG : Licht &gt; Unsichtbar</CHA>
+        </CHAS>
+      </MOD>
+      <MOD adr="2" name="AMD230_4">
+        <CHAS grp="Ausgang">
+          <CHA adr="0" visu="true">2.DG : Pumpe &gt; Zirkulation</CHA>
+          <CHA adr="1" visu="true">2.DG : Sonderfunktion &gt; Testausgang</CHA>
+          <CHA adr="2" visu="true">3.Außen : Licht &gt; Gartenlicht</CHA>
+        </CHAS>
+      </MOD>
+      <MOD adr="3" name="JRM">
+        <CHAS grp="Ausgang">
+          <CHA adr="0" visu="true">2.DG : Licht &gt; Kein AMD-Ausgang</CHA>
+        </CHAS>
+      </MOD>
+    </MODS>
+  </STM>
+</PROJECT>

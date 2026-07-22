@@ -24,6 +24,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.PHCRemoteControl
         PRODUCT_NAME: PHC Remote
+        PRODUCT_MODULE_NAME: PHCRemoteControl
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
@@ -38,6 +39,25 @@ targets:
         CODE_SIGN_IDENTITY: ""
         CODE_SIGNING_REQUIRED: NO
 
+  PHCRemoteControlTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests/PHCRemoteControlTests
+      - path: protocol-fixtures/project
+        buildPhase: resources
+      - path: protocol-fixtures/commands
+        buildPhase: resources
+    dependencies:
+      - target: PHCRemoteControl
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_REQUIRED: NO
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PHC Remote.app/PHC Remote"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
 schemes:
   PHCRemoteControl:
     build:
@@ -45,5 +65,8 @@ schemes:
         PHCRemoteControl: all
     run:
       config: Debug
+    test:
+      targets:
+        - PHCRemoteControlTests
     archive:
       config: Release

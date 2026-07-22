@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "Synthetic AMD",
+    "floors": [
+      {
+        "id": "floor:v1:RUc",
+        "name": "EG",
+        "devices": [
+          {
+            "id": "device:v1:amd:1:0",
+            "name": "Deckenlicht",
+            "kind": "light",
+            "category": "Licht",
+            "ref": {
+              "moduleClass": "amd",
+              "dip": 1,
+              "channel": 0
+            }
+          },
+          {
+            "id": "device:v1:amd:1:1",
+            "name": "Fernseher",
+            "kind": "outlet",
+            "category": "Steckdose",
+            "ref": {
+              "moduleClass": "amd",
+              "dip": 1,
+              "channel": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "floor:v1:REc",
+        "name": "DG",
+        "devices": [
+          {
+            "id": "device:v1:amd:2:1",
+            "name": "Testausgang",
+            "kind": "light",
+            "category": "Sonderfunktion",
+            "ref": {
+              "moduleClass": "amd",
+              "dip": 2,
+              "channel": 1
+            }
+          },
+          {
+            "id": "device:v1:amd:2:0",
+            "name": "Zirkulation",
+            "kind": "outlet",
+            "category": "Pumpe",
+            "ref": {
+              "moduleClass": "amd",
+              "dip": 2,
+              "channel": 0
+            }
+          }
+        ]
+      },
+      {
+        "id": "floor:v1:QXXDn2Vu",
+        "name": "Außen",
+        "devices": [
+          {
+            "id": "device:v1:amd:2:2",
+            "name": "Gartenlicht",
+            "kind": "light",
+            "category": "Licht",
+            "ref": {
+              "moduleClass": "amd",
+              "dip": 2,
+              "channel": 2
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

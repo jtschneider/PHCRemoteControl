@@ -7,6 +7,7 @@ enum DeviceKind: String, Codable, Sendable {
     case outlet    // on/off, shown as a socket
     case shutter   // up / stop / down, with optional position
     case scene     // momentary trigger (no persistent state)
+    case button    // unclassified EMD input: expose short- and long-press events
 }
 
 /// Direction command for a shutter/blind.
@@ -73,7 +74,8 @@ struct Device: Identifiable, Codable, Sendable {
 
     /// Security-sensitive momentary actions should not fire from an accidental tap.
     var needsActivationConfirmation: Bool {
-        kind == .scene && PHCKeywords.matches(PHCKeywords.panic, category + " " + name)
+        (kind == .scene || kind == .button)
+            && PHCKeywords.matches(PHCKeywords.panic, category + " " + name)
     }
 
     var systemImage: String {
@@ -90,6 +92,8 @@ struct Device: Identifiable, Codable, Sendable {
                 return "person.crop.circle.badge.checkmark"
             }
             return "play.circle"
+        case .button:
+            return "button.programmable"
         }
     }
 }

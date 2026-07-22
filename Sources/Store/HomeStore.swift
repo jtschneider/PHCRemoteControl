@@ -175,6 +175,15 @@ final class HomeStore {
         }
     }
 
+    /// Send the hold event offered by an unclassified project input.
+    func longPressButton(_ device: Device) {
+        guard let ref = device.ref else { return }
+        Task {
+            do { try await client.longPressButton(ref) }
+            catch { phase = .failed(PHCLocalization.string("Long press %@: %@", device.name, error.localizedDescription)) }
+        }
+    }
+
     func setBrightness(_ device: Device, _ value: Int) {
         guard let ref = device.ref else { return }
         project?.devices[device.id]?.state.brightness = value

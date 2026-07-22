@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<PROJECT>
+  <PAGE name="Zentral">
+    <TOOL enable="true" internalName="infratec.tools.Panik" bez="Panik">
+      <NODES>
+        <NODE index="0" ntype="ntInput" comfortSoftwareObjects="PushButton" name="Taster">
+          <VAR modGrp="Eingangsmodule" chGrp="Eingang" mod="7" cha="2"/>
+        </NODE>
+      </NODES>
+    </TOOL>
+  </PAGE>
+  <PAGE name="Werkzeuge">
+    <LAYER name="Safety">
+      <TOOL enable="true" internalName="infratec.tools.Panik" bez="House alarm">
+        <NODES>
+          <NODE index="0" ntype="ntInput" comfortSoftwareObjects="Switch" name="Kontakt">
+            <VAR modGrp="Eingangsmodule" chGrp="Eingang" mod="9" cha="0"/>
+          </NODE>
+          <NODE index="5" ntype="ntInput" comfortSoftwareObjects="PushButton" name="Taster">
+            <VAR modGrp="Eingangsmodule" chGrp="Eingang" mod="9" cha="1"/>
+          </NODE>
+        </NODES>
+      </TOOL>
+    </LAYER>
+    <LAYER name="Urlaub">
+      <TOOL enable="true" internalName="infratec.tools.Anwesenheitssimulation" bez="Anwesenheitssimulation Urlaub">
+        <NODES>
+          <NODE index="1" ntype="ntInput" comfortSoftwareObjects="PushButton" name="Taster">
+            <VAR modGrp="Eingangsmodule" chGrp="Eingang" mod="9" cha="2"/>
+          </NODE>
+        </NODES>
+      </TOOL>
+      <TOOL enable="false" internalName="infratec.tools.Panik" bez="Disabled panic">
+        <NODES>
+          <NODE index="0" ntype="ntInput" comfortSoftwareObjects="PushButton" name="Taster">
+            <VAR modGrp="Eingangsmodule" chGrp="Eingang" mod="9" cha="3"/>
+          </NODE>
+        </NODES>
+      </TOOL>
+      <TOOL enable="true" internalName="infratec.tools.Unrelated" bez="Unsupported">
+        <NODES>
+          <NODE index="0" ntype="ntInput" comfortSoftwareObjects="PushButton" name="Taster">
+            <VAR modGrp="Eingangsmodule" chGrp="Eingang" mod="9" cha="4"/>
+          </NODE>
+        </NODES>
+      </TOOL>
+    </LAYER>
+  </PAGE>
+</PROJECT>

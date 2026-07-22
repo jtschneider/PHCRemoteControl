@@ -1,0 +1,21 @@
+{{define "settings"}}
+<header class="page-heading"><h1>{{.Text.Settings}}</h1></header>
+<section class="settings-section" aria-labelledby="connection-heading">
+  <h2 id="connection-heading">{{.Text.Connection}}</h2>
+  <dl>
+    <div><dt>{{.Text.BridgeAddress}}</dt><dd>{{.PublicOrigin}}</dd></div>
+    <div><dt>{{.Text.STMAddress}}</dt><dd>{{.STMAddress}}</dd></div>
+    <div><dt>{{.Text.Project}}</dt><dd>{{.Project.Name}}</dd></div>
+  </dl>
+  <button type="button" data-project-reload>{{.Text.ReloadProject}}</button>
+  <output class="settings-status" data-role="reload-status" aria-live="polite"></output>
+</section>
+<section class="settings-section" aria-labelledby="storage-heading">
+  <h2 id="storage-heading">{{.Text.StorageTitle}}</h2>
+  <p>{{.Text.StorageText}}</p>
+</section>
+<section class="settings-section" aria-labelledby="language-heading">
+  <h2 id="language-heading">{{.Text.Language}}</h2>
+  <p class="language-links"><a href="/settings?lang=en" hreflang="en">{{.Text.English}}</a><a href="/settings?lang=de" hreflang="de">{{.Text.German}}</a></p>
+</section>
+{{end}}

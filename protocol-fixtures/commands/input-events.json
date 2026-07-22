@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "plans": {
+    "shortPress": [2, 4, 5],
+    "longPress": [2, 3],
+    "tip": [2, 4]
+  }
+}

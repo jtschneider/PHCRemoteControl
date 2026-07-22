@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "Synthetic Full",
+    "floors": [
+      {
+        "id": "floor:v1:U2FmZXR5",
+        "name": "Safety",
+        "devices": [
+          {
+            "id": "device:v1:emd:9:1",
+            "name": "House alarm",
+            "kind": "scene",
+            "category": "Security",
+            "ref": { "moduleClass": "emd", "dip": 9, "channel": 1 }
+          }
+        ]
+      },
+      {
+        "id": "floor:v1:RUc",
+        "name": "EG",
+        "devices": [
+          {
+            "id": "device:v1:amd:2:1",
+            "name": "Licht 2",
+            "kind": "light",
+            "category": "Licht",
+            "ref": { "moduleClass": "amd", "dip": 2, "channel": 1 }
+          },
+          {
+            "id": "device:v1:amd:2:0",
+            "name": "Licht 10",
+            "kind": "light",
+            "category": "Licht",
+            "ref": { "moduleClass": "amd", "dip": 2, "channel": 0 }
+          },
+          {
+            "id": "device:v1:emd:4:4",
+            "name": "Terrasse",
+            "kind": "shutter",
+            "category": "Jalousie",
+            "ref": { "moduleClass": "emd", "dip": 4, "channel": 4 },
+            "upRef": { "moduleClass": "emd", "dip": 4, "channel": 5 }
+          },
+          {
+            "id": "device:v1:emd:4:0",
+            "name": "Küche",
+            "kind": "shutter",
+            "category": "Rollo",
+            "ref": { "moduleClass": "emd", "dip": 4, "channel": 0 },
+            "upRef": { "moduleClass": "emd", "dip": 4, "channel": 1 }
+          },
+          {
+            "id": "device:v1:amd:2:2",
+            "name": "Verstärker",
+            "kind": "outlet",
+            "category": "Steckdose",
+            "ref": { "moduleClass": "amd", "dip": 2, "channel": 2 }
+          },
+          {
+            "id": "device:v1:emd:4:6",
+            "name": "Gästezimmer senken",
+            "kind": "button",
+            "category": "Rollo",
+            "ref": { "moduleClass": "emd", "dip": 4, "channel": 6 }
+          },
+          {
+            "id": "device:v1:emd:4:7",
+            "name": "Unbekannt heben",
+            "kind": "button",
+            "category": "Taster",
+            "ref": { "moduleClass": "emd", "dip": 4, "channel": 7 }
+          }
+        ]
+      },
+      {
+        "id": "floor:v1:REc",
+        "name": "DG",
+        "devices": [
+          {
+            "id": "device:v1:emd:4:2",
+            "name": "Flur",
+            "kind": "shutter",
+            "category": "Lüftung Fenster",
+            "ref": { "moduleClass": "emd", "dip": 4, "channel": 2 },
+            "upRef": { "moduleClass": "emd", "dip": 4, "channel": 3 }
+          }
+        ]
+      },
+      {
+        "id": "floor:v1:WmVudHJhbA",
+        "name": "Zentral",
+        "devices": [
+          {
+            "id": "device:v1:emd:7:0",
+            "name": "Alles aus",
+            "kind": "scene",
+            "category": "Licht",
+            "ref": { "moduleClass": "emd", "dip": 7, "channel": 0 }
+          },
+          {
+            "id": "device:v1:emd:7:2",
+            "name": "Panik",
+            "kind": "scene",
+            "category": "Sicherheit",
+            "ref": { "moduleClass": "emd", "dip": 7, "channel": 2 }
+          },
+          {
+            "id": "device:v1:emd:7:1",
+            "name": "EG Zu",
+            "kind": "button",
+            "category": "Rollläden",
+            "ref": { "moduleClass": "emd", "dip": 7, "channel": 1 }
+          }
+        ]
+      },
+      {
+        "id": "floor:v1:VXJsYXVi",
+        "name": "Urlaub",
+        "devices": [
+          {
+            "id": "device:v1:emd:9:2",
+            "name": "Urlaub",
+            "kind": "scene",
+            "category": "Presence Simulation",
+            "ref": { "moduleClass": "emd", "dip": 9, "channel": 2 }
+          }
+        ]
+      }
+    ]
+  }
+}

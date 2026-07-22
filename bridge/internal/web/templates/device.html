@@ -1,0 +1,24 @@
+{{define "device"}}
+<article class="device device-{{.Kind}}" id="device-{{.ID}}" data-device-id="{{.ID}}" data-power="{{.Power}}">
+  <div class="device-copy">
+    <p class="device-kind">{{.KindLabel}}</p>
+    <h3>{{.Name}}</h3>
+    {{if .StateCapable}}<p class="device-state">{{.StateLabel}} <output data-role="power-state">{{.PowerLabel}}</output></p>{{end}}
+    <output class="command-status" data-role="command-status" aria-live="polite"></output>
+  </div>
+  <button class="favourite-button" type="button" data-favorite-toggle="{{.ID}}" aria-pressed="false" aria-label="{{.FavouriteLabel}}" title="{{.FavouriteLabel}}"><span aria-hidden="true">&#9734;</span></button>
+  <div class="device-controls">
+    {{if .StateCapable}}
+    <button class="power-button" type="button" data-action="toggle" data-role="power-command" aria-pressed="{{.PowerPressed}}">{{.PowerAction}}</button>
+    {{end}}
+    {{range .Actions}}
+    <button type="button" data-action="{{.Action}}" {{if .Confirm}}data-confirm="{{.Confirm}}"{{end}} class="action-{{.Symbol}}">
+      {{if eq .Symbol "up"}}<span aria-hidden="true">&uarr;</span>{{end}}
+      {{if eq .Symbol "down"}}<span aria-hidden="true">&darr;</span>{{end}}
+      {{if eq .Symbol "stop"}}<span aria-hidden="true">&#9632;</span>{{end}}
+      <span>{{.Label}}</span>{{if .Experimental}} <small>{{$.ExperimentalLabel}}</small>{{end}}
+    </button>
+    {{end}}
+  </div>
+</article>
+{{end}}

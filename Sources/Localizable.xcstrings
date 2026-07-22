@@ -146,6 +146,17 @@
         }
       }
     },
+    "Buttons" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taster"
+          }
+        }
+      }
+    },
     "Can't reach the PHC" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -350,6 +361,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deckenlichter"
+          }
+        }
+      }
+    },
+    "Long press" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langer Tastendruck"
+          }
+        }
+      }
+    },
+    "Long press %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ lange drücken"
+          }
+        }
+      }
+    },
+    "Long press %@: %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Langer Tastendruck %@: %@"
           }
         }
       }

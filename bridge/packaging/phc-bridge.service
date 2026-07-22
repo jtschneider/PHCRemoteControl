@@ -1,0 +1,32 @@
+[Unit]
+Description=PHC Remote bridge (STM v3 control website)
+Documentation=https://github.com/jtschneider/PHCRemoteControl
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=phc-bridge
+Group=phc-bridge
+# systemd creates and owns /var/lib/phc-bridge (the project cache lives here).
+StateDirectory=phc-bridge
+EnvironmentFile=/etc/phc-bridge/bridge.env
+ExecStart=/usr/local/bin/phc-bridge
+# The bridge no longer exits when the STM is unreachable; on-failure covers only
+# genuine crashes, with a delay so it never becomes a tight restart loop.
+Restart=on-failure
+RestartSec=5
+
+# Hardening.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+# StateDirectory is writable automatically; nothing else needs to be.
+
+[Install]
+WantedBy=multi-user.target

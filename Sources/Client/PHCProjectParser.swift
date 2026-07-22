@@ -201,6 +201,7 @@ private final class Parser: NSObject, XMLParserDelegate {
         var motorDown: [String: (Int, Int)] = [:]   // key → (emdAdr, channelAdr)
         var motorUp:   [String: (Int, Int)] = [:]
         var motorType: [String: String] = [:]       // key → verbatim TYPE ("Rollo", "Lüftung Fenster", …)
+        var representedInputRefs = Set<ChannelRef>()
 
         for ch in visuChannels
         where ch.moduleGroup == "Eingangsmodule"
@@ -221,15 +222,15 @@ private final class Parser: NSObject, XMLParserDelegate {
 
         for (key, downInfo) in motorDown {
             guard let (sortIdx, room, _, label) = parseMotorName(key) else { continue }
+            guard let up = motorUp[key] else { continue }
             let downRef = ChannelRef(moduleClass: .emd, dip: downInfo.0, channel: downInfo.1)
-            var upRef: ChannelRef?
-            if let up = motorUp[key] {
-                upRef = ChannelRef(moduleClass: .emd, dip: up.0, channel: up.1)
-            }
+            let upRef = ChannelRef(moduleClass: .emd, dip: up.0, channel: up.1)
             let device = Device(name: label, kind: .shutter, ref: downRef,
                                 shutterUpRef: upRef, category: motorType[key] ?? "Rollo")
             roomMap[room, default: (sortIdx, [])].devices.append(device)
             roomMap[room]?.sortIndex = sortIdx
+            representedInputRefs.insert(downRef)
+            representedInputRefs.insert(upRef)
         }
 
         // 2b. EMD_VIR virtual inputs → central/group scene buttons (e.g. the
@@ -245,15 +246,32 @@ private final class Parser: NSObject, XMLParserDelegate {
             let device = Device(name: label, kind: .scene, ref: ref, category: type)
             roomMap[room, default: (sortIdx, [])].devices.append(device)
             roomMap[room]?.sortIndex = sortIdx
+            representedInputRefs.insert(ref)
         }
 
-        // 2c. Selected automation tools from project.tpfx (e.g. panic buttons or
+        // 2c. Total input fallback. Every remaining visible EMD channel gets its
+        //     own card with the project label left untouched. A short activation
+        //     and a long press cover both event paths without guessing the wiring.
+        for ch in visuChannels
+        where ch.moduleGroup == "Eingangsmodule"
+            && ch.channelGroup == "Eingang"
+        {
+            guard let p = parseChannelParts(ch.text) else { continue }
+            let ref = ChannelRef(moduleClass: .emd, dip: ch.moduleAdr, channel: ch.channelAdr)
+            guard !representedInputRefs.contains(ref) else { continue }
+            let device = Device(name: p.label, kind: .button, ref: ref, category: p.type)
+            roomMap[p.room, default: (p.sortIdx, [])].devices.append(device)
+            roomMap[p.room]?.sortIndex = p.sortIdx
+            representedInputRefs.insert(ref)
+        }
+
+        // 2d. Selected automation tools from project.tpfx (e.g. panic buttons or
         //     presence simulation) can be controllable even when they are not
         //     exported as EMD_VIR visu channels in project.ppfx. Surface them as
         //     momentary scene/action buttons by simulating their activation input.
         let existingSceneRefs = Set(roomMap.values.flatMap { entry in
             entry.devices.compactMap { device -> ChannelRef? in
-                device.kind == .scene ? device.ref : nil
+                (device.kind == .scene || device.kind == .button) ? device.ref : nil
             }
         })
         for action in toolActions where !existingSceneRefs.contains(action.ref) {
@@ -399,6 +417,7 @@ private final class Parser: NSObject, XMLParserDelegate {
         case .shutter: return 2
         case .outlet:  return 3
         case .scene:   return 4
+        case .button:  return 5
         }
     }
 

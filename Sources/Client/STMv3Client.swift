@@ -125,8 +125,7 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
             try await tapMove(upRef ?? downRef)
         case .stop:
             // A long press on the senken (down) channel stops motion in either direction.
-            try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .press)
-            try await simInputEvent(emdModule: downRef.dip, channel: downRef.channel, event: .longPress)
+            try await sendInputPlan(PHCInputEventPlan.longPress, to: downRef)
         case .tiltOpen:
             try await tip(upRef ?? downRef)
         case .tiltClose:
@@ -137,9 +136,7 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
     /// A short tap on an EMD channel: press → release → doublePress, which starts the
     /// shutter motor in that channel's direction.
     private func tapMove(_ ref: ChannelRef) async throws {
-        try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .press)
-        try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .release)
-        try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .doublePress)
+        try await sendInputPlan(PHCInputEventPlan.shortPress, to: ref)
     }
 
     /// A brief "tip" on an EMD channel: press → release, *without* the doublePress
@@ -154,14 +151,24 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
     /// input we *can* reach. Only roller shutters were available to test; a capture
     /// from a real jalousie would confirm or replace this exact event sequence.
     private func tip(_ ref: ChannelRef) async throws {
-        try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .press)
-        try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: .release)
+        try await sendInputPlan(PHCInputEventPlan.tip, to: ref)
     }
 
     /// Fire a virtual/central input (EMD_VIR) as a momentary button tap.
     /// Uses the same short-tap sequence as a shutter move.
     func activateScene(_ ref: ChannelRef) async throws {
         try await tapMove(ref)
+    }
+
+    /// Simulate holding an EMD input: press -> longPress.
+    func longPressButton(_ ref: ChannelRef) async throws {
+        try await sendInputPlan(PHCInputEventPlan.longPress, to: ref)
+    }
+
+    private func sendInputPlan(_ plan: [PHCInputEvent], to ref: ChannelRef) async throws {
+        for event in plan {
+            try await simInputEvent(emdModule: ref.dip, channel: ref.channel, event: event)
+        }
     }
 
     // MARK: - State polling
@@ -231,7 +238,7 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
     ///   • shutter B → module 3, channels 10/11: [0, 3, 11|10, event, 4]
     /// So param2 = EMD module adr (raw ppfx adr), param3 = channel (CHA adr),
     /// param5 = 4 (a constant EMD key-type for EMD_RUE rocker inputs).
-    private func simInputEvent(emdModule: Int, channel: Int, event: InputEvent) async throws {
+    private func simInputEvent(emdModule: Int, channel: Int, event: PHCInputEvent) async throws {
         _ = try await call(method: "service.stm.simInputEvent",
                            params: [.int(0), .int(emdModule), .int(channel), .int(event.rawValue), .int(4)])
     }
@@ -338,15 +345,6 @@ final class STMv3Client: PHCClient, @unchecked Sendable {
         }
         return result
     }
-}
-
-// MARK: - Input event types
-
-private enum InputEvent: Int {
-    case press = 2
-    case longPress = 3       // hold → stop movement
-    case release = 4
-    case doublePress = 5     // "click confirmed" → start pulse
 }
 
 // MARK: - ChannelRef extensions for bus addressing

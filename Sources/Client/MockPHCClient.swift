@@ -52,6 +52,10 @@ final class MockPHCClient: PHCClient, @unchecked Sendable {
         try await Task.sleep(for: .milliseconds(120))
     }
 
+    func longPressButton(_ ref: ChannelRef) async throws {
+        try await Task.sleep(for: .milliseconds(120))
+    }
+
     // The mock pushes state changes itself, so polling is a no-op.
     func registerDevices(_ devices: [Device]) {}
     func startPolling() {}
@@ -103,4 +107,3 @@ final class MockPHCClient: PHCClient, @unchecked Sendable {
         for update in updates { continuation.yield(update) }
     }
 }
-

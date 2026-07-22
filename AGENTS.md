@@ -5,7 +5,10 @@ PEHA/Honeywell PHC installation over the LAN, replacing the aging official
 *PHC Home Control* app.
 
 > Deep protocol detail lives in [docs/PROTOCOL.md](docs/PROTOCOL.md);
-> architecture in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+> architecture in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md); and the
+> current Raspberry Pi Go website-bridge handoff in
+> [docs/GO_WEBSITE_BRIDGE_PLAN.md](docs/GO_WEBSITE_BRIDGE_PLAN.md), with the
+> earlier broad plan retained in [docs/GO_BRIDGE_PLAN.md](docs/GO_BRIDGE_PLAN.md).
 
 ## TL;DR of the situation
 
@@ -44,6 +47,16 @@ PEHA/Honeywell PHC installation over the LAN, replacing the aging official
   toolbar menu does Expand All / Collapse All.
 - ✅ App icon + in-app logo (`Sources/Assets.xcassets`). App display name **"PHC Remote"**.
 - ✅ German localization via `Sources/Localizable.xcstrings` (menu labels only).
+- ✅ Raspberry Pi Go bridge phases 1–3: malformed STM HTTP handling, typed
+  XML-RPC, bounded project download/ZIP extraction, and full Swift-parity
+  PPFX/selected-TPFX parsing are tested. Shared fixtures cover stable IDs, AMD
+  outputs, paired shutters/windows, scenes, panic/presence tools, and fallback
+  EMD buttons; redacted aggregate output matches the real Swift parse.
+- ✅ Go bridge Phase 4 implementation: a single command-priority STM scheduler,
+  exact light/outlet/rocker commands, revisioned internal events, and subscriber-
+  aware AMD polling. Read-only hardware verification resolves all 51 AMD outputs;
+  macOS baseline is 21 ms p50/p95 per read and 211 ms per ten-module sweep. Pi
+  timing and deliberately selected live command targets remain deployment checks.
 
 ## Wire protocol — confirmed by mitmproxy capture
 
